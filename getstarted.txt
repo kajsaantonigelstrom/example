@@ -1,0 +1,109 @@
+Overview
+--------
+This paper describes the development and production environment for
+a Python project that will be used in the Kajsa-lab
+
+Source code and documentation are located on the GitHub which can be reached
+from any computer connected to the internet..
+Currently (Sept 2018) we have a test account 'kajsaantonigelstrom' on GitHub.
+When we come closer to production the project will probably be moved to a 'better
+named' account that also is private. 
+The current account is completely open for anyone to check out and check in 
+files. But is is free! 
+The cost for making a repository private is 7 dollars/month.
+
+'git' is a very popular and mature revision control system and to
+use the GitHub you have to install it on your computer.
+
+For production users:
+You will be fine with the information in this document.
+
+For developers:
+Git is very well documented on the internet and you can just google any command
+to get its documentation. Git is very flexible and it is easy for a beginner to get lost.
+That is why we have a document, Git-WoW, that gives an overview of git and recommended
+way of working within this project. 
+You will get access to this Git-WoW as soon as you have installed git and made your first
+connection to GitHub. Which is what the rest of this paper is all about.
+
+
+========================================================================================
+Install git on Windows
+----------------------
+Go to the Git website
+https://git-scm.com/download/win
+
+Download the 32- or 64-bit version of git depending on your PC. (Git for Windows Setup)
+
+Install:
+Follow the instructions, here are the answer to some choices you get:
+Default editor : notepad++
+Adjusting your path : Use Git from the Windows Command Prompt
+Choosing HTTPS transport backend : Use the OpenSSL library (if you don't have other info)
+Configuring the line ending conversions : Checkout Windows-style, commit Unix-style
+Configuring the terminal emulator : Use Windows' default console window
+Configuring extra options : no extra options (unless you know better)
+Configuring experimental options : no options 
+
+Goto/create a folder where you want to put your work-tree that you are about to get from git:
+
+Open a command window and use the cd command to make your selected folder the current:
+
+e.g.
+c:
+cd \users\<myusername>
+md projects
+cd projects
+
+========================================================================================
+Install git on Mac
+----------------------
+Go to the Git website
+https://git-scm.com/download/mac
+%# toBeDone: investigate and document installation procedure, what tools to use
+(kdiff3 and notepad++ or equivalents)
+
+========================================================================================
+Install git on Mint (%toBeDone: check if this procedure goes for other Linux systems%
+-------------------
+open a Terminal
+
+If you type 'git' you will get the suggestion to run the command
+sudo apt install git
+
+First make sure that 'apt' is up2date:
+sudo apt-get update
+
+Then install git 
+sudo apt install git
+
+Open a Terminal window and use the cd command to make your selected folder the current:
+
+e.g.
+cd /home/<myusername>
+mkdir projects
+cd projects
+
+========================================================================================
+Clone a repository from GitHub
+------------------------------
+Still in the Command or Terminal window (depending on your platform),
+make the initial checkout of the github repository by making a copy on
+your own disk:
+
+git clone https://github.com/kajsaantonigelstrom/example.git
+
+Now make example the current directory
+cd example
+
+Now you can try the git command:
+git status
+to see the state of the repository.
+
+Production users that want to get a new version from the repository will use
+the command
+git pull
+to get the last version of the system
+
+
+
