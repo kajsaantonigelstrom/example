@@ -1,0 +1,5 @@
+För wxpython behövde jag pil.
+PIL är felpackat i distributionen och kan ersättas med pillow rakt av:
+
+pip uninstall pil
+pip install pillow
