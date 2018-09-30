@@ -37,7 +37,7 @@ Download the 32- or 64-bit version of git depending on your PC. (Git for Windows
 
 Install:
 Follow the instructions, here are the answer to some choices you get:
-Default editor : notepad++
+Default editor : notepad++ (You might have to install it on-the-fly to get past that step in the installation)
 Adjusting your path : Use Git from the Windows Command Prompt
 Choosing HTTPS transport backend : Use the OpenSSL library (if you don't have other info)
 Configuring the line ending conversions : Checkout Windows-style, commit Unix-style
@@ -74,9 +74,7 @@ sudo apt install git
 First make sure that 'apt' is up2date:
 sudo apt-get update
 
-Then install git 
-sudo apt install git
-
+Then install
 Open a Terminal window and use the cd command to make your selected folder the current:
 
 e.g.
