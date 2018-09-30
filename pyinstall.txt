@@ -1,5 +1,48 @@
 Windows:
 
+go to
+https://www.python.org/downloads/windows/
+
+Download the latest version 2 build. (Not version 3)
+Windows x86-64 MSI installer
+or
+Windows x86 MSI installer
+
+Installation options:
+- install for all users
+- install on C:\Python27\
+- no need to customize
+
+When the installation is ready you probably have to add python to the search
+path. This is done in Settings/Environment Variables (Inställningar/Miljövariabler)
+To the 'Path' variable (under System Variables ) add:
+c:\python27
+c:\python27\Scripts
+
+Open a cmd (command window)
+Type 
+python
+This should start the Python program and print
+Python 2.7.15 (v2.7.15:ca079a3ea3, Apr 30 2018, 16:30:26) [MSC v.1500 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>>
+
+This checks that you have successfully installed python
+Press CTRL-Z and Enter to exit from python
+
+You will also need to install the wxpython module
+First check that you have the latest 'pip' version (used for installation of modules)
+python -m pip install --upgrade pip
+pip install wxpython
+pip uninstall pil
+pip install pillow
+
+Start the testprogram
+python wxpython.py
+
+
+___________________________________________________________________________
+
 För wxpython behövde jag pil.
 PIL är felpackat i distributionen och kan ersättas med pillow rakt av:
 
