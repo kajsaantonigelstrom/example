@@ -58,30 +58,36 @@ cd projects
 ========================================================================================
 Install git on Mac
 ----------------------
-Go to the Git website
-https://git-scm.com/download/mac
-%# toBeDone: investigate and document installation procedure, what tools to use
-(kdiff3 and notepad++ or equivalents)
 
+brew update
+brew install git
+#kdiff3
+ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+brew tap homebrew/cask
+brew cask install kdiff3
+Now, see the Clone section below
 ========================================================================================
 Install git on Mint (%toBeDone: check if this procedure goes for other Linux systems%
 -------------------
 open a Terminal
 
-If you type 'git' you will get the suggestion to run the command
-sudo apt install git
-
 First make sure that 'apt' is up2date:
 sudo apt-get update
+sudo apt-get install
 
-Then install
-Open a Terminal window and use the cd command to make your selected folder the current:
+(If you type 'git' you will get the suggestion to run the command)
+sudo apt install git
+sudo apt install gitk
+
+
+Then install from GitHub
+In the terminal window, use the cd command to make your selected folder the current:
 
 e.g.
 cd /home/<myusername>
 mkdir projects
 cd projects
-
+Now, see the Clone section below
 ========================================================================================
 Clone a repository from GitHub
 ------------------------------

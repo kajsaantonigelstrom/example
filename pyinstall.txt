@@ -42,73 +42,29 @@ python wxpython.py
 
 
 ___________________________________________________________________________
+Mac
 
-För wxpython behövde jag pil.
-PIL är felpackat i distributionen och kan ersättas med pillow rakt av:
+Use Python3
 
-pip uninstall pil
-pip install pillow
+pip3 install -U wxPython
+___________________________________________________________________________
 
 Mint:
-För att installera pip blev jag tvungen att vara superuser
-först sätta password:
-sudo passwd root
+Python2 och 3 are installed with Mint 19
 
-Sen logga in som su
-su
-<passwd>
+# First you need to install the Packet installer pip
+sudo apt install python3-pip
 
-Installera PIP
-curl https://bootstrap.pypa.io/get-pip.py | python
-curl https://bootstrap.pypa.io/get-pip.py | python
+# pip3 install wheel // Probably not necessary
 
-sudo apt install python
-sudo apt install python-pip
-pip install --upgrade pip
+pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-18.04  wxPython
 
-#some build tools for Debian
-sudo apt-get install build-essential devscripts
- pip install wxpython ger byggfel
-
-brew install --python wxmac
-sudo apt-get install python-wx*
-
-Lappetoppe example # python
-Python 2.7.12 (default, Nov 19 2016, 06:48:10) 
-[GCC 5.4.0 20160609] on linux2
-Type "help", "copyright", "credits" or "license" for more information.
->>> import wx
->>> wx.version()
-'3.0.2.0 gtk2 (classic)'
-
-c:\anton2\python>python
-Python 2.7.15 (v2.7.15:ca079a3ea3, Apr 30 2018, 16:30:26) [MSC v.1500 64 bit (AMD64)] on win32
-Type "help", "copyright", "credits" or "license" for more information.
->>> import wx
->>> wx.version()
-u'4.0.3 msw (phoenix) wxWidgets 3.0.5'
-
-c:\anton2\python>c:\Python37\python.exe
-Python 3.7.0 (v3.7.0:1bf9cc5093, Jun 27 2018, 04:59:51) [MSC v.1914 64 bit (AMD64)] on win32
-Type "help", "copyright", "credits" or "license" for more information.
->>> import wx
->>> wx.version()
-'4.0.3 msw (phoenix) wxWidgets 3.0.5'
-
-https://www.2daygeek.com/resetter-reset-ubuntu-linux-mint-to-factory-default-settings/#
-
-
-
-""""""""""""""""""""
-reset mint
-Här finns en readme som förklarar vad göra för att installera appen Resetter
-https://github.com/gaining/Resetter/blob/master/README.md
-Man laddar ner två filer och kör dessa kommandon
-    sudo apt install gdebi
-    sudo gdebi add-apt-key_1.0-0.5_all.deb
-    sudo gdebi resetter_2.2.3-stable_all.deb
-Sen kör man appen Resetter. men det funkade inte, inget ui kommer upp :(
-
-
+#Install PyCharm debugger (developer)
+sudo apt install snapd
+sudo snap install pycharm-community --classic
+#Start the debugger
+/snap/bin/pycharm-community
+#Got problems with distutils when I made a new project in PyCharm, solution:
+sudo apt-get install python3-distutils
 
 
