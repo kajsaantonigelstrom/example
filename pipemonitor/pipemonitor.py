@@ -51,7 +51,7 @@ class Monitor:
         return 1
 
     def CreateTestData(self, count):
-        braintopfolder = "//Lappetoppe/kajsaproject/brainsdir";
+        braintopfolder = "c:\\kajsaproject\\brainsdir" #"//Lappetoppe/kajsaproject/brainsdir";
 
         # remove current data
         shutil.rmtree(braintopfolder)
@@ -81,8 +81,13 @@ class Monitor:
             f = open(jobfile,"w")
             f.write(braindir);
             f.write("\n")
-            f.write("Kajsa.rcp")
-            f.write("\n")
+            frcp = open(self.recipefolder+"/Kajsa.rcp")
+            while(1):
+                rline = frcp.readline()
+                if (rline == ""):
+                    break;
+                f.write(rline);
+            frcp.close()
             f.close()
 
 def main():

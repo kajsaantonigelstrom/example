@@ -4,21 +4,54 @@ import os
 import uuid
 from time import sleep
 import random
+import subprocess
 
 class PipeJob:
     def __init__(self, jobfile):
         self.running = True
         self.jobname = jobfile
-        self.c = random.randint(3,10);
-        return
+        self.c = random.randint(2,6);
+        # Get the recipe
+        f = open(jobfile,"r");
+        self.jobfolder = f.readline().rstrip();
+        self.logfilename = self.jobfolder+"/"+os.path.basename(self.jobfolder)+".log"
+        self.command = []
+        while(1):
+            cmd = f.readline().rstrip()
+            if cmd == "":
+                break;
+            self.command.append(cmd);
+        self.currentstep = 0
+        self.logfile = open(self.logfilename,'w')
+
     def start(self):
+        self.currentcommand = self.command[self.currentstep]
+        os.chdir(self.jobfolder)
+        args = self.currentcommand.split()
+        print os.path.basename(self.jobfolder), self.c, args
+        self.process = subprocess.Popen(args, 0, None, None, self.logfile, shell=True)
+        self.currentstep = self.currentstep + 1
         return
+
     def poll(self):
+        # Check the delay
         if self.c > 0:
             self.c = self.c - 1;
         if self.c<=0:
-            self.running = False;
-
+            # poll the process
+            self.returncode = self.process.poll()
+            if (self.returncode == None):
+                return
+            self.logfile = open(self.logfilename,'a')
+            self.logfile.write(self.currentcommand+" terminated with return code "+str(self.returncode)+"\n")
+            # More commands
+            if (len(self.command) <= self.currentstep):
+                self.running = False
+                self.logfile.close()
+                return
+            # Yes !
+            self.c = random.randint(2,6);
+            self.start()
 class Worker:
     def grabjob(self):
         # Find a jobfile and move it to 'current
@@ -56,7 +89,7 @@ class Worker:
 
         # First line in pipemonitor.cfg is the Job folder
         self.jobfolder = f.readline().rstrip();
-        self.recipefolder = f.readline().rstrip();
+#        self.recipefolder = f.readline().rstrip();
         f.close()
         
         # Check that we can create files in the jobfolder
@@ -72,13 +105,13 @@ class Worker:
             return 0
         
         # Check that we can read the recipefolder
-        self.recipelist = os.listdir(self.recipefolder)
-        try:
-            self.recipelist = os.listdir(self.recipefolder)
-        except:
-            estring = "Cannot reach the folder '"+self.recipefolder+"'"
-            print estring
-            return 0
+#        self.recipelist = os.listdir(self.recipefolder)
+#        try:
+#            self.recipelist = os.listdir(self.recipefolder)
+#        except:
+#            estring = "Cannot reach the folder '"+self.recipefolder+"'"
+#            print estring
+#            return 0
 
         self.concurrent = 1;
         if (processes!=""):
@@ -104,7 +137,6 @@ class Worker:
                     jobobject = PipeJob(newjob)
                     jobobject.start();
                     running.append(jobobject)
-                    print newjob, "started", jobobject.c
                 else:
                     break;
             # check if any job is finished
