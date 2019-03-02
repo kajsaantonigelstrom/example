@@ -27,9 +27,14 @@ class PipeJob:
     def start(self):
         self.currentcommand = self.command[self.currentstep]
         os.chdir(self.jobfolder)
+        print self.jobfolder
         args = self.currentcommand.split()
         print os.path.basename(self.jobfolder), self.c, args
-        self.process = subprocess.Popen(args, 0, None, None, self.logfile, shell=True)
+        if (os.name == 'nt'):
+            self.process = subprocess.Popen(args, 0, None, None, self.logfile, shell=True)
+        else:
+            self.process = subprocess.Popen(args, 0, None, None, self.logfile)
+
         self.currentstep = self.currentstep + 1
         return
 
