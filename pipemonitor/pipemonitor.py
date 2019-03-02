@@ -29,6 +29,7 @@ class Monitor:
         # First line in pipemonitor.cfg is the Job folder
         self.jobfolder = f.readline().rstrip();
         self.recipefolder = f.readline().rstrip();
+        self.braintopfolder = f.readline().rstrip();
         f.close()
         
         # Check that we can create files in the jobfolder
@@ -56,12 +57,11 @@ class Monitor:
 
     def CreateTestData(self, count):
 
-        braintopfolder = "c:\\kajsaproject\\brainsdir" #"//Lappetoppe/kajsaproject/brainsdir";
 
         # remove current data
-        shutil.rmtree(braintopfolder)
+        shutil.rmtree(self.braintopfolder)
         try:
-            shutil.rmtree(braintopfolder)
+            shutil.rmtree(self.braintopfolder)
         except:
             pass
         # remove jobs in jobfolder
@@ -70,10 +70,10 @@ class Monitor:
         deletefiles(self.jobfolder+"/finished");
         
         print "Creating ", count, "brains"
-        os.mkdir(braintopfolder)
+        os.mkdir(self.braintopfolder)
         for i in range(1,count+1):
             # Create a subject with a test image
-            braindir = braintopfolder + "/Brain"+str(i)
+            braindir = self.braintopfolder + "/Brain"+str(i)
             os.mkdir(braindir);
             os.chdir(braindir);
 
