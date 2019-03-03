@@ -28,11 +28,12 @@ class Monitor:
 
     def CheckConfig(self):
         # Open the main config file
-        mconfigfilename = "pipemonitor.cfg"
+        self.startfolder = os.getcwd()
+        self.mconfigfilename = "pipemonitor.cfg"
         try:
-            f = open(mconfigfilename,"r");
+            f = open(self.mconfigfilename,"r");
         except:
-            estring = "Monitor Configuration file '"+mconfigfilename+"' not found"
+            estring = "Monitor Configuration file '"+self.mconfigfilename+"' not found"
             print (estring)
             return 0;
 
@@ -65,6 +66,12 @@ class Monitor:
 
         return 1
 
+    def ClearFinished(self):
+        deletefiles(self.jobfolder+"/finished");
+
+    def ClearQueue(self):
+        deletefiles(self.jobfolder);
+        
     def CreateTestData(self, count):
 
         # remove current data
@@ -103,7 +110,36 @@ class Monitor:
                 f.write(rline);
             frcp.close()
             f.close()
+    def SetBrainsFolder(self, dir):
+        self.braintopfolder = dir
+        self.writeCfgFile()
 
+    def SetJobFolder(self, dir):
+        self.jobfolder = dir
+        try:
+            os.mkdir(dir+"/current")
+            os.mkdir(dir+"/finished")
+        except:
+            pass
+        self.writeCfgFile()
+
+    def writeCfgFile(self):
+        os.chdir(self.startfolder)
+        self.mconfigfilename = "pipemonitor.cfg"
+        try:
+            f = open(self.mconfigfilename,"w");
+            f.write(self.jobfolder)
+            f.write("\n");
+            f.write(self.recipefolder)
+            f.write("\n");
+            f.write(self.braintopfolder)
+            f.write("\n");
+            f.close()
+        except:
+            estring = "Monitor Configuration file '"+mconfigfilename+"' not found"
+            print (estring)
+            return 0;
+        
 def main():
 
     # Create the Monitor object

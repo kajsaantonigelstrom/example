@@ -1,4 +1,5 @@
 import wx
+import sys
 from dialog_gentestdata import GenerateTestdataDialog
 from dialog_genjobs import GenerateJobsDialog
 from dialog_handlerecipes import HandleRecipesDialog
@@ -10,10 +11,10 @@ class MainWindow(wx.Frame):
         menubar = wx.MenuBar()
         file = wx.Menu()
         functions = wx.Menu()        
-        file.Append(101, '&quit', 'Quit')
-        functions.Append(102, '&recipes', 'Handle Recipes');
-        functions.Append(103, '&jobs', 'Generate Jobs');
-        functions.Append(104, '&testdata', 'Generate Test Brains');
+        file.Append(101, '&Quit', 'Quit')
+        functions.Append(102, '&Handle Recipes', 'Handle Recipes');
+        functions.Append(103, '&Generate Jobs', 'Generate Jobs');
+        functions.Append(104, '&Generate Test Brains', 'Generate Test Brains');
 
         menubar.Append(file, '&File')
         menubar.Append(functions, 'F&unctions')
@@ -22,19 +23,20 @@ class MainWindow(wx.Frame):
         self.SetTitle('Kajsas Pipe Monitor')
         
         self.timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.update, self.timer)
+        self.Bind(wx.EVT_TIMER, self.updateUI, self.timer)
         self.timer.Start(2000)
 
         self.monitor = monitor
         self.InitUI()
         self.Centre()
 
-    def update(self, event):
+    def updateUI(self, event=None):
         self.monitor.updatebrainstate();
         self.currlist.Set(self.monitor.currentjobs)
         self.queuelist.Set(self.monitor.jobqueue)
         self.finishedlist.Set(self.monitor.finishedjobs)
-            
+        self.finished_total.SetLabel(str(len(self.monitor.finishedjobs)))
+        self.queue_total.SetLabel(str(len(self.monitor.jobqueue)))
         
 
     def InitUI(self):
@@ -78,39 +80,45 @@ class MainWindow(wx.Frame):
         # Buttons for queue/finished
         vbox.Add((-1, 5))
         jobsizer = wx.BoxSizer(wx.HORIZONTAL)
-        j1 = wx.StaticText(panel, label="Total:")
-        j2 = wx.TextCtrl(panel)
-        j3 = wx.Button(panel, label="Clear")#, pos=(200, 325))
-        jobsizer.Add(j1, 0);
-        jobsizer.Add(j2, 3);
-        jobsizer.Add(j3, 0);
+        self.queue_hdr = wx.StaticText(panel, label="Total: ")
+        self.queue_total = wx.StaticText(panel, label="0")
+        self.queue_clear = wx.Button(panel, label="Clear")#, pos=(200, 325))
+        self.Bind(wx.EVT_BUTTON, self.ClearQueue, self.queue_clear)
+        jobsizer.Add(self.queue_hdr, 0);
+        jobsizer.Add(self.queue_total, 3);
+        jobsizer.Add(self.queue_clear, 0);
 
-        j1 = wx.StaticText(panel, label="Total:")
-        j2 = wx.TextCtrl(panel)
-        j3 = wx.Button(panel, label="Clear")#, pos=(200, 325))
-        jobsizer.Add(j1, 0);
-        jobsizer.Add(j2, 3);
-        jobsizer.Add(j3, 0);
+        self.finished_hdr = wx.StaticText(panel, label="Total: ")
+        self.finished_total = wx.StaticText(panel, label = "0")
+        self.finished_clear = wx.Button(panel, label="Clear")#, pos=(200, 325))
+        self.Bind(wx.EVT_BUTTON, self.ClearFinished, self.finished_clear)
+        jobsizer.Add(self.finished_hdr, 0);
+        jobsizer.Add(self.finished_total, 3);
+        jobsizer.Add(self.finished_clear, 0);
         vbox.Add(jobsizer, flag=wx.LEFT|wx.RIGHT|wx.EXPAND, border=10)
 
         # Job Folder
         jobsizer = wx.BoxSizer(wx.HORIZONTAL)
-        j1 = wx.StaticText(panel, label="Job Folder")
-        j2 = wx.TextCtrl(panel)
-        j3 = wx.Button(panel, label="...")#, pos=(200, 325))
-        jobsizer.Add(j1, 1);
-        jobsizer.Add(j2, 3);
-        jobsizer.Add(j3, 0);
+        jobfolder_hdr = wx.StaticText(panel, label="Job Folder")
+        self.jobfolder_txt = wx.TextCtrl(panel)
+        self.jobfolder_txt.SetValue(self.monitor.jobfolder);
+        jobfolder_sel = wx.Button(panel, label="...")#, pos=(200, 325))
+        self.Bind(wx.EVT_BUTTON, self.SelectJobFolder, jobfolder_sel)
+        jobsizer.Add(jobfolder_hdr, 1);
+        jobsizer.Add(self.jobfolder_txt, 3);
+        jobsizer.Add(jobfolder_sel, 0);
         vbox.Add(jobsizer, flag=wx.LEFT|wx.RIGHT|wx.EXPAND, border=10)
         
         # Brains Folder
         jobsizer = wx.BoxSizer(wx.HORIZONTAL)
-        j1 = wx.StaticText(panel, label="Brains Folder")
-        j2 = wx.TextCtrl(panel)
-        j3 = wx.Button(panel, label="...")#, pos=(200, 325))
-        jobsizer.Add(j1, 1);
-        jobsizer.Add(j2, 3);
-        jobsizer.Add(j3, 0);
+        brainsfolder_hdr = wx.StaticText(panel, label="Brains Folder")
+        self.brainsfolder_txt = wx.TextCtrl(panel)
+        self.brainsfolder_txt.SetValue(self.monitor.braintopfolder);
+        brainsfolder_sel = wx.Button(panel, label="...")#, pos=(200, 325))
+        self.Bind(wx.EVT_BUTTON, self.SelectBrainFolder, brainsfolder_sel)
+        jobsizer.Add(brainsfolder_hdr, 1);
+        jobsizer.Add(self.brainsfolder_txt, 3);
+        jobsizer.Add(brainsfolder_sel, 0);
         vbox.Add(jobsizer, flag=wx.LEFT|wx.RIGHT|wx.EXPAND, border=10)
         
         panel.SetSizer(vbox)
@@ -126,10 +134,29 @@ class MainWindow(wx.Frame):
             GenerateJobsDialog(self, "Generate Jobs").ShowModal();
         elif id == 104:
             GenerateTestdataDialog(self, "Generate Test Brains", self.monitor).ShowModal();
-        self.Show()
-    def SelectTestDataFolder(self, event):
+        self.updateUI()
+
+    def SelectJobFolder(self, event):
         dlg = wx.DirDialog (None, "Choose input directory", "",
                     wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+        dlg.SetPath(self.monitor.jobfolder)
         if dlg.ShowModal() == wx.ID_OK:    
-            x = 1
+            self.monitor.SetJobFolder(dlg.GetPath())
+            self.jobfolder_txt.SetValue(self.monitor.jobfolder);
+
+    def SelectBrainFolder(self, event):
+        dlg = wx.DirDialog (None, "Choose input directory", "",
+                    wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+        dlg.SetPath(self.monitor.braintopfolder)
+        if dlg.ShowModal() == wx.ID_OK:    
+            self.monitor.SetBrainsFolder(dlg.GetPath())
+            self.brainsfolder_txt.SetValue(self.monitor.braintopfolder);
+
+    def ClearFinished(self, event):
+        self.monitor.ClearFinished()
+        self.updateUI()
+        
+    def ClearQueue(self, event):
+        self.monitor.ClearQueue()
+        self.updateUI()
 
