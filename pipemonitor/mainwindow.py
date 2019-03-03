@@ -21,9 +21,21 @@ class MainWindow(wx.Frame):
         menubar.Bind(wx.EVT_MENU, self.menuhandler) 
         self.SetTitle('Kajsas Pipe Monitor')
         
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.update, self.timer)
+        self.timer.Start(2000)
+
+        self.monitor = monitor
         self.InitUI()
         self.Centre()
-        self.monitor = monitor
+
+    def update(self, event):
+        self.monitor.updatebrainstate();
+        self.currlist.Set(self.monitor.currentjobs)
+        self.queuelist.Set(self.monitor.jobqueue)
+        self.finishedlist.Set(self.monitor.finishedjobs)
+            
+        
 
     def InitUI(self):
         panel = wx.Panel(self)
@@ -37,9 +49,8 @@ class MainWindow(wx.Frame):
         vbox.Add((-1, 5))
 
         hbox3 = wx.BoxSizer(wx.HORIZONTAL)
-        currentjobs = ['2/5 Brain1 : fenix/worker', '4/5 Brain3 : fenix/worker'] 
-        currlist = wx.ListBox(panel, size = (100,-1), choices = currentjobs, style = wx.LB_SINGLE)        
-        hbox3.Add(currlist, proportion=1, flag=wx.EXPAND)
+        self.currlist = wx.ListBox(panel, size = (100,-1))        
+        hbox3.Add(self.currlist, proportion=1, flag=wx.EXPAND)
         vbox.Add(hbox3, proportion=1, flag=wx.LEFT|wx.RIGHT|wx.EXPAND,
             border=10)
 
@@ -57,11 +68,11 @@ class MainWindow(wx.Frame):
         # Listboxes for queue/finished
         vbox.Add((-1, 5))
         hbox3 = wx.BoxSizer(wx.HORIZONTAL)
-        queuelist = wx.ListBox(panel, size = (100,-1), style = wx.LB_SINGLE)        
-        finishedlist = wx.ListBox(panel, size = (100,-1), style = wx.LB_SINGLE)        
-        hbox3.Add(queuelist, proportion=1, flag=wx.EXPAND)
+        self.queuelist = wx.ListBox(panel, size = (100,-1))        
+        self.finishedlist = wx.ListBox(panel, size = (100,-1))        
+        hbox3.Add(self.queuelist, proportion=1, flag=wx.EXPAND)
         hbox3.Add((5, 5))
-        hbox3.Add(finishedlist, proportion=1, flag=wx.EXPAND)
+        hbox3.Add(self.finishedlist, proportion=1, flag=wx.EXPAND)
         vbox.Add(hbox3, proportion=1, flag=wx.LEFT|wx.RIGHT|wx.EXPAND, border=10)
 
         # Buttons for queue/finished

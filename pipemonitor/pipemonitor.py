@@ -14,6 +14,18 @@ def deletefiles(dir):
         os.remove(dir+"/"+f)
 
 class Monitor:
+    def __init__(self):
+        self.currentjobs = []
+        self.jobqueue = []
+        self.finishedjobs = []
+    def updatebrainstate(self):
+        os.chdir(self.jobfolder)
+        self.jobqueue = filter(os.path.isfile, os.listdir(self.jobfolder))
+        os.chdir(self.jobfolder+'/current')
+        self.currentjobs = filter(os.path.isfile, os.listdir(self.jobfolder+'/current'))
+        os.chdir(self.jobfolder+'/finished')
+        self.finishedjobs = filter(os.path.isfile, os.listdir(self.jobfolder+'/finished'))
+
     def CheckConfig(self):
         # Open the main config file
         mconfigfilename = "pipemonitor.cfg"
