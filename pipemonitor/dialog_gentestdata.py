@@ -6,22 +6,23 @@ class GenerateTestdataDialog(wx.Dialog):
       super(GenerateTestdataDialog, self).__init__(parent, title = title, size = (250,150)) 
       panel = wx.Panel(self) 
 
-      sizer = wx.GridBagSizer(6, 2)
+      vbox = wx.BoxSizer(wx.VERTICAL)
+      hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-      y = 0;
-      combo = wx.StaticText(panel, label="count")
-      sizer.Add(combo, pos=(y, 0), flag=wx.ALIGN_CENTER, border=5)
+      t1 = wx.StaticText(panel, label="No of Brains")
+      hbox.Add(t1);
       tc2 = wx.TextCtrl(panel)
-      sizer.Add(tc2, pos=(y, 1), flag=wx.EXPAND, border=5)
+      hbox.Add(tc2)
+      vbox.Add((15, 15))
+      vbox.Add(hbox, flag=wx.ALIGN_CENTER)
 
+      btn_genbrains = wx.Button(panel, label = "Generate Test Data")
+      btn_cancel = wx.Button(panel, label = "Cancel")
+      vbox.Add(btn_genbrains, flag=wx.ALIGN_CENTER)
+      vbox.Add(btn_cancel, flag=wx.ALIGN_CENTER)
+#      self.Bind(wx.EVT_BUTTON, self.OnClick, btn)
 
-      y = y +1
-      btn = wx.Button(panel, label = "Generate Test Data")
-      sizer.Add(btn, pos=(y, 0), span=(0,2), flag=wx.ALIGN_CENTER, border=5)
-      self.Bind(wx.EVT_BUTTON, self.OnClick, btn)
-
-      panel.SetSizer(sizer)
-      sizer.Fit(parent)
+      panel.SetSizer(vbox)
 
    def OnClick(self, event):
       dial = wx.MessageDialog(None, 'All current Brains will be wiped. Sure?', 'WARNING!!!',

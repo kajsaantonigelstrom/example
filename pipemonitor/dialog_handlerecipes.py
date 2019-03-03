@@ -2,23 +2,31 @@ import wx
 
 class HandleRecipesDialog(wx.Dialog): 
    def __init__(self, parent, title): 
-      super(HandleRecipesDialog, self).__init__(parent, title = title, size = (250,150)) 
+      super(HandleRecipesDialog, self).__init__(parent, title = title, size = (350,250)) 
       panel = wx.Panel(self) 
 
-      sizer = wx.GridBagSizer(6, 2)
+      vbox = wx.BoxSizer(wx.VERTICAL)
+      vbox.Add((15, 15))
 
-      y = 0;
+      hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+
+
       currentjobs = ['Recipe 1', 'Kajas recept', '<new>'] 
       currlist = wx.ListBox(panel, size = (100,-1), choices = currentjobs, style = wx.LB_SINGLE)        
-      sizer.Add(currlist, pos=(y, 0), flag=wx.EXPAND|wx.ALL, border=5)
+      hbox2.Add(currlist, proportion=1, flag=wx.EXPAND)
+
+      hbox2.Add((5, 5))
 
       tc3 = wx.TextCtrl(panel, style=wx.TE_MULTILINE)
-      sizer.Add(tc3, pos=(y, 1), flag=wx.EXPAND|wx.ALL, border=5)
-      y = y +1
-      
-      j3 = wx.Button(panel, label="Save")#, pos=(200, 325))
-      sizer.Add(j3, pos=(y, 1), border=5)
+      hbox2.Add(tc3, proportion=1, flag=wx.EXPAND)
 
-      
-      panel.SetSizer(sizer)
-      sizer.Fit(parent)
+      vbox.Add(hbox2, proportion=1, flag=wx.LEFT|wx.RIGHT|wx.EXPAND, border=10)
+
+      hbox = wx.BoxSizer(wx.HORIZONTAL)
+      btn_save = wx.Button(panel, label="Save")
+      btn_close = wx.Button(panel, label="Close")
+      hbox.Add(btn_save)
+      hbox.Add(btn_close)
+      vbox.Add(hbox,flag=wx.ALIGN_RIGHT)
+
+      panel.SetSizer(vbox)
