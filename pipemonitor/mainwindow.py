@@ -47,12 +47,12 @@ class MainWindow(wx.Frame):
         # Headers for queue/finished
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         st3 = wx.StaticText(panel, label='Job Queue:')
-        hbox2.Add(st3)
+        hbox2.Add(st3, 3, wx.ALIGN_LEFT)
         st4 = wx.StaticText(panel, label='Finished:')
 #        hbox2.AddSpacer(150)
-        hbox2.Add(st4, 0, wx.ALIGN_RIGHT)
+        hbox2.Add(st4, 3, wx.ALIGN_RIGHT)
 #        hbox2.AddSpacer(150)
-        vbox.Add(hbox2, flag=wx.LEFT | wx.TOP, border=10)
+        vbox.Add(hbox2, flag=wx.LEFT|wx.RIGHT|wx.EXPAND, border=10)
 
         # Listboxes for queue/finished
         vbox.Add((-1, 5))
@@ -70,14 +70,14 @@ class MainWindow(wx.Frame):
         j1 = wx.StaticText(panel, label="Total:")
         j2 = wx.TextCtrl(panel)
         j3 = wx.Button(panel, label="Clear")#, pos=(200, 325))
-        jobsizer.Add(j1, 1);
+        jobsizer.Add(j1, 0);
         jobsizer.Add(j2, 3);
         jobsizer.Add(j3, 0);
 
         j1 = wx.StaticText(panel, label="Total:")
         j2 = wx.TextCtrl(panel)
         j3 = wx.Button(panel, label="Clear")#, pos=(200, 325))
-        jobsizer.Add(j1, 1);
+        jobsizer.Add(j1, 0);
         jobsizer.Add(j2, 3);
         jobsizer.Add(j3, 0);
         vbox.Add(jobsizer, flag=wx.LEFT|wx.RIGHT|wx.EXPAND, border=10)

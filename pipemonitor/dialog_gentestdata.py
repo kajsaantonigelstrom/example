@@ -20,7 +20,7 @@ class GenerateTestdataDialog(wx.Dialog):
       btn_cancel = wx.Button(panel, label = "Cancel")
       vbox.Add(btn_genbrains, flag=wx.ALIGN_CENTER)
       vbox.Add(btn_cancel, flag=wx.ALIGN_CENTER)
-#      self.Bind(wx.EVT_BUTTON, self.OnClick, btn)
+      self.Bind(wx.EVT_BUTTON, self.OnClick, btn_genbrains)
 
       panel.SetSizer(vbox)
 
