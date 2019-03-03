@@ -1,7 +1,8 @@
 import wx
 
 class HandleRecipesDialog(wx.Dialog): 
-   def __init__(self, parent, title): 
+   def __init__(self, parent, title, controller): 
+      self.controller = controller
       super(HandleRecipesDialog, self).__init__(parent, title = title, size = (350,250)) 
       panel = wx.Panel(self) 
 

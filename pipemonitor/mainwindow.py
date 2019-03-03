@@ -129,9 +129,9 @@ class MainWindow(wx.Frame):
             sys.exit();
         elif id == 102:
             #self.SelectTestDataFolder(event)
-            HandleRecipesDialog(self, "Handle Recipes").ShowModal();
+            HandleRecipesDialog(self, "Handle Recipes", self.monitor).ShowModal();
         elif id == 103:
-            GenerateJobsDialog(self, "Generate Jobs").ShowModal();
+            GenerateJobsDialog(self, "Generate Jobs", self.monitor).ShowModal();
         elif id == 104:
             GenerateTestdataDialog(self, "Generate Test Brains", self.monitor).ShowModal();
         self.updateUI()

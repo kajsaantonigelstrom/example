@@ -72,6 +72,31 @@ class Monitor:
     def ClearQueue(self):
         deletefiles(self.jobfolder);
         
+    def CreateJobs(self, recipe):
+        # remove jobs in jobfolder
+        deletefiles(self.jobfolder);
+        deletefiles(self.jobfolder+"/current");
+        deletefiles(self.jobfolder+"/finished");
+        recipestr = ""
+        try:
+            frcp = open(self.recipefolder+"/"+recipe, "r")
+            recipestr = frcp.read();
+            frcp.close()
+        except:
+            return "Cannot open the recipe ',"+recipe+"'"
+
+        os.chdir(self.braintopfolder)
+        brainlist = filter(os.path.isdir, os.listdir(self.braintopfolder))
+        for brain in brainlist:
+            # Create a corresponding job file
+            jobfile = self.jobfolder+"/"+brain+".job"
+            f = open(jobfile,"w")
+            f.write(self.braintopfolder+"/"+brain);
+            f.write("\n")
+            f.write(recipestr)
+            f.close()
+        return ""
+
     def CreateTestData(self, count):
 
         # remove current data
@@ -80,11 +105,6 @@ class Monitor:
             shutil.rmtree(self.braintopfolder)
         except:
             pass
-        # remove jobs in jobfolder
-        deletefiles(self.jobfolder);
-        deletefiles(self.jobfolder+"/current");
-        deletefiles(self.jobfolder+"/finished");
-        
         print ("Creating ", count, "brains")
         os.mkdir(self.braintopfolder)
         for i in range(1,count+1):
@@ -97,19 +117,6 @@ class Monitor:
             f.write("hej")
             f.close()
 
-            # Create a corresponding job file
-            jobfile = self.jobfolder+"/Brain"+str(i)+".txt"
-            f = open(jobfile,"w")
-            f.write(braindir);
-            f.write("\n")
-            frcp = open(self.recipefolder+"/Kajsa.rcp")
-            while(1):
-                rline = frcp.readline()
-                if (rline == ""):
-                    break;
-                f.write(rline);
-            frcp.close()
-            f.close()
     def SetBrainsFolder(self, dir):
         self.braintopfolder = dir
         self.writeCfgFile()
@@ -139,7 +146,12 @@ class Monitor:
             estring = "Monitor Configuration file '"+mconfigfilename+"' not found"
             print (estring)
             return 0;
-        
+
+    def GetRecipeList(self):
+        os.chdir(self.recipefolder)
+        rdir = filter(os.path.isfile, os.listdir(self.recipefolder))
+        return rdir
+
 def main():
 
     # Create the Monitor object
