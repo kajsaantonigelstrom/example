@@ -33,4 +33,4 @@ class GenerateJobsDialog(wx.Dialog):
            dial = wx.MessageDialog(None, error, 'WARNING!!!',
             wx.OK | wx.ICON_QUESTION)
            dial.ShowModal()
-           
+       self.Destroy()

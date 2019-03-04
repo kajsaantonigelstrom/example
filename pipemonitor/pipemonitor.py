@@ -18,13 +18,32 @@ class Monitor:
         self.currentjobs = []
         self.jobqueue = []
         self.finishedjobs = []
+
     def updatebrainstate(self):
         os.chdir(self.jobfolder)
         self.jobqueue = filter(os.path.isfile, os.listdir(self.jobfolder))
-        os.chdir(self.jobfolder+'/current')
-        self.currentjobs = filter(os.path.isfile, os.listdir(self.jobfolder+'/current'))
         os.chdir(self.jobfolder+'/finished')
         self.finishedjobs = filter(os.path.isfile, os.listdir(self.jobfolder+'/finished'))
+        # For the current jobs we want to present the .state file
+        os.chdir(self.jobfolder+'/current')
+        self.currentjobs = []
+        jobfiles = filter(os.path.isfile, os.listdir(self.jobfolder+'/current'))
+        for jobfile in jobfiles:
+            try:
+                f = open(jobfile,"r");
+                self.brainfolder = f.readline().rstrip();
+                f.close()
+            except:
+                print ("Error opening", jobfile)
+                continue;
+            statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
+            try:
+                f = open(statefilename,"r")
+                self.currentjobs.append(f.readline().rstrip())
+                f.close()
+            except:
+                estring = "Error opening " + statefilename
+                self.currentjobs.append(estring)
 
     def CheckConfig(self):
         # Open the main config file
@@ -71,8 +90,9 @@ class Monitor:
 
     def ClearQueue(self):
         deletefiles(self.jobfolder);
-        
+
     def CreateJobs(self, recipe):
+        recipe = self.CheckRecipeName(recipe)
         # remove jobs in jobfolder
         deletefiles(self.jobfolder);
         deletefiles(self.jobfolder+"/current");
@@ -147,11 +167,60 @@ class Monitor:
             print (estring)
             return 0;
 
+    # Get recipe names
     def GetRecipeList(self):
         os.chdir(self.recipefolder)
         rdir = filter(os.path.isfile, os.listdir(self.recipefolder))
+        for ix in range(0,len(rdir)):
+            # mask away .rcp
+            s = rdir[ix]
+            s = s[:len(s)-4]
+            rdir[ix] = s
         return rdir
 
+    # Handle recipe extension
+    def CheckRecipeName(self, recipename):
+        pos = recipename.find('.rcp')
+        if (pos < 0):
+            recipename = recipename+".rcp"
+        return recipename
+        
+    # Read a specific recipe
+    def GetRecipe(self, recipename):
+        recipename = self.CheckRecipeName(recipename)
+        try:
+            frcp = open(self.recipefolder+"/"+recipename, "r")
+            recipe = frcp.read();
+            recipe = recipe.encode('utf-8')
+            frcp.close()
+            return recipe
+        except:
+            return ""
+        
+    def DeleteRecipe(self, recipename):
+        recipename = self.CheckRecipeName(recipename)
+        recipename = self.recipefolder+"/"+recipename;
+        os.remove(recipename);
+        
+    def RenameRecipe(self, recipename, newname):
+        recipename = self.CheckRecipeName(recipename)
+        newname = self.CheckRecipeName(newname)
+        fromfile = self.recipefolder+"/"+recipename;
+        to = self.recipefolder+"/"+newname;
+        os.rename(fromfile, to);
+        
+    def WriteRecipe(self, recipename, recipe):
+        recipename = self.CheckRecipeName(recipename)
+        try:
+            recipe = recipe.decode('utf-8')
+            frcp = open(self.recipefolder+"/"+recipename, "w")
+            frcp.write(recipe)
+            frcp.close()
+            return True
+        except:
+            return False
+        return False
+        
 def main():
 
     # Create the Monitor object

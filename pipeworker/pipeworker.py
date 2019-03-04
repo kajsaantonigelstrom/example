@@ -7,14 +7,17 @@ import random
 import subprocess
 
 class PipeJob:
-    def __init__(self, jobfile):
+    def __init__(self, jobfile, startfolder):
+        self.startfolder = startfolder # id of the current worker program
         self.running = True
         self.jobname = jobfile
         self.c = random.randint(2,6);
         # Get the recipe
         f = open(jobfile,"r");
-        self.jobfolder = f.readline().rstrip();
-        self.logfilename = self.jobfolder+"/"+os.path.basename(self.jobfolder)+".log"
+        self.brainfolder = f.readline().rstrip();
+        self.logfilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".log"
+        self.statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
+        self.brainname = os.path.basename(self.brainfolder);
         self.command = []
         while(1):
             cmd = f.readline().rstrip()
@@ -26,16 +29,23 @@ class PipeJob:
 
     def start(self):
         self.currentcommand = self.command[self.currentstep]
-        os.chdir(self.jobfolder)
-        print self.jobfolder
+        os.chdir(self.brainfolder)
+        print self.brainfolder
         args = self.currentcommand.split()
-        print os.path.basename(self.jobfolder), self.c, args
+        print os.path.basename(self.brainfolder), self.c, args
         if (os.name == 'nt'):
             self.process = subprocess.Popen(args, 0, None, None, self.logfile, shell=True)
         else:
             self.process = subprocess.Popen(args, 0, None, None, self.logfile)
 
         self.currentstep = self.currentstep + 1
+        statestring = str(self.currentstep)+"/"+str(len(self.command))+"    "+self.brainname;
+        statestring = statestring + "    " + self.startfolder;
+        print 55, self.statefilename
+        print 56, statestring
+        f = open(self.statefilename, "w");
+        f.write(statestring);
+        f.close()
         return
 
     def poll(self):
@@ -74,6 +84,7 @@ class Worker:
         
     def CheckConfig(self):
         # Find the configuration file
+        self.startfolder = os.getcwd()
         try:
             f = open("pipeworker.cfg", "r");
         except:
@@ -139,7 +150,7 @@ class Worker:
             while (len(running) < self.concurrent):
                 newjob = self.grabjob()
                 if (newjob != ""):
-                    jobobject = PipeJob(newjob)
+                    jobobject = PipeJob(newjob, self.startfolder)
                     jobobject.start();
                     running.append(jobobject)
                 else:

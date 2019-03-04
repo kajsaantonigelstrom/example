@@ -32,3 +32,4 @@ class GenerateTestdataDialog(wx.Dialog):
             wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
       if dial.ShowModal() == wx.ID_YES:
           self.controller.CreateTestData(self.tc2.GetValue());
+          self.Destroy()
