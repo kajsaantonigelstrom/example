@@ -30,9 +30,9 @@ class PipeJob:
     def start(self):
         self.currentcommand = self.command[self.currentstep]
         os.chdir(self.brainfolder)
-        print self.brainfolder
+        print (self.brainfolder)
         args = self.currentcommand.split()
-        print os.path.basename(self.brainfolder), self.c, args
+        print (os.path.basename(self.brainfolder), self.c, args)
         if (os.name == 'nt'):
             self.process = subprocess.Popen(args, 0, None, None, self.logfile, shell=True)
         else:
@@ -41,8 +41,6 @@ class PipeJob:
         self.currentstep = self.currentstep + 1
         statestring = str(self.currentstep)+"/"+str(len(self.command))+"    "+self.brainname;
         statestring = statestring + "    " + self.startfolder;
-        print 55, self.statefilename
-        print 56, statestring
         f = open(self.statefilename, "w");
         f.write(statestring);
         f.close()
@@ -88,7 +86,7 @@ class Worker:
         try:
             f = open("pipeworker.cfg", "r");
         except:
-            print "Configuration file 'pipeworker.cfg' is missing"
+            print ("Configuration file 'pipeworker.cfg' is missing")
             return 0;
         # First line is the path to the Monitor folder/main config
         mconfigfilename = f.readline().rstrip();
@@ -100,7 +98,7 @@ class Worker:
             f = open(mconfigfilename,"r");
         except:
             estring = "Monitor Configuration file '"+mconfigfilename+"' not found"
-            print estring
+            print (estring)
             return 0;
 
         # First line in pipemonitor.cfg is the Job folder
@@ -110,14 +108,14 @@ class Worker:
         
         # Check that we can create files in the jobfolder
         filename = self.jobfolder+"/"+str(uuid.uuid4())
-#        print filename
+#        print (filename)
         try:
             f = open(filename, "w");
             f.write("hej")
             f.close()
             os.remove(filename);
         except:
-            print "Not allowed to write in folder", jobfolder
+            print ("Not allowed to write in folder", jobfolder)
             return 0
         
         # Check that we can read the recipefolder
@@ -126,26 +124,26 @@ class Worker:
 #            self.recipelist = os.listdir(self.recipefolder)
 #        except:
 #            estring = "Cannot reach the folder '"+self.recipefolder+"'"
-#            print estring
+#            print (estring)
 #            return 0
 
         self.concurrent = 1;
         if (processes!=""):
             try:
                 self.concurrent = int(processes)
-                print "Number of concurrent processes is set to", self.concurrent
+                print ("Number of concurrent processes is set to", self.concurrent)
             except:
                 estring = "'"+processes+"' is not a number (defines no of concurrent processes)"
-                print estring
-                print "Number of concurrent processes will default to", self.concurrent
+                print (estring)
+                print ("Number of concurrent processes will default to", self.concurrent)
         else:
-            print "Number of concurrent processes will default to", self.concurrent
+            print ("Number of concurrent processes will default to", self.concurrent)
         return 1
 
     def Run(self):
         running = [] # list of running 'pipejob'
         while (1):
-            print "loop", len(running)
+            print ("loop", len(running))
             # First make sure all possible jobs has been started
             while (len(running) < self.concurrent):
                 newjob = self.grabjob()
@@ -160,7 +158,7 @@ class Worker:
                 x.poll()
                 if (x.running == False):
                     running.remove(x);
-                    print x.jobname, "finished"
+                    print (x.jobname, "finished")
                     fromfile = x.jobname
                     to = self.jobfolder + "/finished/" + os.path.basename(fromfile)
                     os.rename(fromfile, to);
