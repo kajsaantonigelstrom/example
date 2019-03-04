@@ -1,4 +1,8 @@
 ﻿# -*- coding: utf-8 -*-
+# This file contains two classes
+# The Worker which watches the job folder for new jobs to grab
+# The PipeJob represents a job and performs the actual process
+# handling: It spawns a process for each step in the 'recipe'
 import sys
 import os
 import uuid
@@ -65,6 +69,7 @@ class PipeJob:
             # Yes !
             self.c = random.randint(2,6);
             self.start()
+
 class Worker:
     def grabjob(self):
         # Find a jobfile and move it to 'current
@@ -103,12 +108,10 @@ class Worker:
 
         # First line in pipemonitor.cfg is the Job folder
         self.jobfolder = f.readline().rstrip();
-#        self.recipefolder = f.readline().rstrip();
         f.close()
         
         # Check that we can create files in the jobfolder
         filename = self.jobfolder+"/"+str(uuid.uuid4())
-#        print (filename)
         try:
             f = open(filename, "w");
             f.write("hej")
@@ -118,15 +121,6 @@ class Worker:
             print ("Not allowed to write in folder", jobfolder)
             return 0
         
-        # Check that we can read the recipefolder
-#        self.recipelist = os.listdir(self.recipefolder)
-#        try:
-#            self.recipelist = os.listdir(self.recipefolder)
-#        except:
-#            estring = "Cannot reach the folder '"+self.recipefolder+"'"
-#            print (estring)
-#            return 0
-
         self.concurrent = 1;
         if (processes!=""):
             try:

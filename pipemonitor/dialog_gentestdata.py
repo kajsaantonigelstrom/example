@@ -2,6 +2,8 @@ import wx
 import wx.lib
 import wx.lib.masked
 
+# dialog for Generate Testdata
+
 class GenerateTestdataDialog(wx.Dialog): 
    def __init__(self, parent, title, controller):
       self.controller = controller

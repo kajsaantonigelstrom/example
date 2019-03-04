@@ -56,6 +56,15 @@ class HandleRecipesDialog(wx.Dialog):
         recipe = self.controller.GetRecipe(self.recipelist.GetString(ix))
         self.tc3.SetValue(recipe)
 
+    # Name entry dialog used for New and Rename
+    def AskForNewName(self, title, currname):
+        dlg = AskNameDialog(self, title, currname);
+        dlg.ShowModal()
+        newname = dlg.GetNewName()
+        dlg.Destroy()
+        return newname
+
+    # Methods bound to the buttons
     def Save(self, event):
         ix = self.recipelist.GetSelection()
         recipename = self.recipelist.GetString(ix)
@@ -73,6 +82,7 @@ class HandleRecipesDialog(wx.Dialog):
         wx.Window.Close(self)
         #wx.PostEvent(self, wx.CLOSE_WINDOW)
         return
+
     def Rename(self, event):
         ix = self.recipelist.GetSelection()
         recipename = self.recipelist.GetString(ix)
@@ -94,10 +104,5 @@ class HandleRecipesDialog(wx.Dialog):
         self.recipelist.SetSelection(ix)
         self.SelectRecipe(None)
         return
-    def AskForNewName(self, title, currname):
-        dlg = AskNameDialog(self, title, currname);
-        dlg.ShowModal()
-        newname = dlg.GetNewName()
-        dlg.Destroy()
-        return newname
+
             

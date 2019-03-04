@@ -1,5 +1,5 @@
 import wx
-
+# The New name entry dialog
 class AskNameDialog(wx.Dialog): 
    def __init__(self, parent, title, oldname): 
       super(AskNameDialog, self).__init__(parent, title = title) 

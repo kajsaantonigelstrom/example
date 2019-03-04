@@ -1,5 +1,7 @@
 import wx
 
+# Generate Jobs dialog
+
 class GenerateJobsDialog(wx.Dialog): 
    def __init__(self, parent, title, controller): 
       self.controller = controller

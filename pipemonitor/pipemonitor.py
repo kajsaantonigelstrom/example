@@ -7,6 +7,8 @@ from time import sleep
 import wx
 from mainwindow import MainWindow
 
+# delete files in a folder (not recursive);
+# removes the folder if possible
 def deletefiles(dir):
     os.chdir(dir);
     l = filter(os.path.isfile, os.listdir(dir))
@@ -19,6 +21,8 @@ class Monitor:
         self.jobqueue = []
         self.finishedjobs = []
 
+    # Called periodically to check the state of jobs
+    # Updates the lists that will be shown in the UI
     def updatebrainstate(self):
         os.chdir(self.jobfolder)
         self.jobqueue = filter(os.path.isfile, os.listdir(self.jobfolder))
@@ -45,6 +49,7 @@ class Monitor:
                 estring = "Error opening " + statefilename
                 self.currentjobs.append(estring)
 
+    # Check access rights for folders to be used
     def CheckConfig(self):
         # Open the main config file
         self.startfolder = os.getcwd()
@@ -85,12 +90,37 @@ class Monitor:
 
         return 1
 
+    # Re-writes the configuration file; used when the user changes
+    # jobdir or brainsdir
+    def writeCfgFile(self):
+        os.chdir(self.startfolder)
+        self.mconfigfilename = "pipemonitor.cfg"
+        try:
+            f = open(self.mconfigfilename,"w");
+            f.write(self.jobfolder)
+            f.write("\n");
+            f.write(self.recipefolder)
+            f.write("\n");
+            f.write(self.braintopfolder)
+            f.write("\n");
+            f.close()
+        except:
+            estring = "Monitor Configuration file '"+mconfigfilename+"' not found"
+            print (estring)
+            return 0;
+
+    ## Methods below here are entry points for the commands in the
+    ## user interface
     def ClearFinished(self):
         deletefiles(self.jobfolder+"/finished");
 
     def ClearQueue(self):
         deletefiles(self.jobfolder);
 
+    # Create one job file for each subfolder in the Brains folder
+    # The job file:
+    # line 1: The full path to the Brains subfolder
+    # line 2-n: The lines in the Recipe
     def CreateJobs(self, recipe):
         recipe = self.CheckRecipeName(recipe)
         # remove jobs in jobfolder
@@ -117,6 +147,8 @@ class Monitor:
             f.close()
         return ""
 
+    # Utility for off-line testing: creates a number of test Brains
+    # in the Brains folder
     def CreateTestData(self, count):
 
         # remove current data
@@ -150,24 +182,8 @@ class Monitor:
             pass
         self.writeCfgFile()
 
-    def writeCfgFile(self):
-        os.chdir(self.startfolder)
-        self.mconfigfilename = "pipemonitor.cfg"
-        try:
-            f = open(self.mconfigfilename,"w");
-            f.write(self.jobfolder)
-            f.write("\n");
-            f.write(self.recipefolder)
-            f.write("\n");
-            f.write(self.braintopfolder)
-            f.write("\n");
-            f.close()
-        except:
-            estring = "Monitor Configuration file '"+mconfigfilename+"' not found"
-            print (estring)
-            return 0;
-
-    # Get recipe names
+    # Get recipe names; the API uses the Recipe name without the
+    # extension (.rcp) that is used when storing them on disc
     def GetRecipeList(self):
         os.chdir(self.recipefolder)
         rdir = filter(os.path.isfile, os.listdir(self.recipefolder))
@@ -178,7 +194,8 @@ class Monitor:
             rdir[ix] = s
         return rdir
 
-    # Handle recipe extension
+    # Handle recipe extension: The API will work both if you use the
+    # exension and if you don't
     def CheckRecipeName(self, recipename):
         pos = recipename.find('.rcp')
         if (pos < 0):

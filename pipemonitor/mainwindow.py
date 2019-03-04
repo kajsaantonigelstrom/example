@@ -43,6 +43,7 @@ class MainWindow(wx.Frame):
         panel = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
 
+        # The listbox with on-going jobs
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         st2 = wx.StaticText(panel, label='On-going jobs:')
         hbox2.Add(st2)
@@ -136,6 +137,7 @@ class MainWindow(wx.Frame):
             GenerateTestdataDialog(self, "Generate Test Brains", self.monitor).ShowModal();
         self.updateUI()
 
+    # Methods bound to the buttons:
     def SelectJobFolder(self, event):
         dlg = wx.DirDialog (None, "Choose input directory", "",
                     wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
