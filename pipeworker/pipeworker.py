@@ -85,6 +85,18 @@ class Worker:
                 pass
         return ""
         
+    def CheckWritable(self, folder):
+        filename = folder+"/"+str(uuid.uuid4())
+        try:
+            f = open(filename, "w");
+            f.write("hej")
+            f.close()
+            os.remove(filename);
+        except:
+            return False
+        return True
+        
+        
     def CheckConfig(self):
         # Find the configuration file
         self.startfolder = os.getcwd()
@@ -93,7 +105,7 @@ class Worker:
         except:
             print ("Configuration file 'pipeworker.cfg' is missing")
             return 0;
-        # First line is the path to the Monitor folder/main config
+        # First line is the path to the Main Config file
         mconfigfilename = f.readline().rstrip();
         # Second line is a digit for number of max concurrent processes
         processes = f.readline().rstrip();
@@ -102,25 +114,24 @@ class Worker:
         try:
             f = open(mconfigfilename,"r");
         except:
-            estring = "Monitor Configuration file '"+mconfigfilename+"' not found"
+            estring = "Main Configuration file '"+mconfigfilename+"' not found"
             print (estring)
             return 0;
 
-        # First line in pipemonitor.cfg is the Job folder
+        # Main config file has jobfolder and brainsfolder
         self.jobfolder = f.readline().rstrip();
+        self.braintopfolder = f.readline().rstrip();
         f.close()
         
         # Check that we can create files in the jobfolder
-        filename = self.jobfolder+"/"+str(uuid.uuid4())
-        try:
-            f = open(filename, "w");
-            f.write("hej")
-            f.close()
-            os.remove(filename);
-        except:
-            print ("Not allowed to write in folder", jobfolder)
-            return 0
-        
+        if (self.CheckWritable(self.jobfolder)==False):
+            print ("Not allowed to write in folder", self.jobfolder)
+            return False
+        # Check that we can create files in the brainsfolder
+        if (self.CheckWritable(self.braintopfolder)==False):
+            print ("Not allowed to write in folder", self.braintopfolder)
+            return False
+            
         self.concurrent = 1;
         if (processes!=""):
             try:
@@ -163,6 +174,19 @@ def main():
     w = Worker()
     # Validate configuration
     if (not w.CheckConfig()):
+        print ("The file 'pipeworker.cfg' should have two lines:")
+        print ("line 1: The folder where the main configuration file 'pipeline.cfg' is located")
+        print ("line 2: The number of allowed concurrent processes for this server")
+        print ("")
+        print ("The main configuration file should have the following layout")
+        print ("line 1: The Job Folder which will be used to communicate information about")
+        print ("        jobs. This folder must be the same on every computer used. This can")
+        print ("        be accomplished by using symbolic links on linux (the ln -s command) or")
+        print ("        on Windows by selecting shared folders in a smart way.")
+        print ("        NOTE: Each used computer MUST have write access to this folder and subfolders")
+        print ("line 2: The Brains Folder (where the data for processing will be available")
+        print ("        See the Job Folder above: same rules for naming and access")
+        print ("")
         sys.exit();
 
     w.Run()

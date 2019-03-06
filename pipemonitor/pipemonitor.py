@@ -50,45 +50,82 @@ class Monitor:
                 self.currentjobs.append(estring)
 
     # Check access rights for folders to be used
-    def CheckConfig(self):
-        # Open the main config file
-        self.startfolder = os.getcwd()
-        self.mconfigfilename = "pipemonitor.cfg"
-        try:
-            f = open(self.mconfigfilename,"r");
-        except:
-            estring = "Monitor Configuration file '"+self.mconfigfilename+"' not found"
-            print (estring)
-            return 0;
-
-        # First line in pipemonitor.cfg is the Job folder
-        self.jobfolder = f.readline().rstrip();
-        self.recipefolder = f.readline().rstrip();
-        self.braintopfolder = f.readline().rstrip();
-        f.close()
-        
-        # Check that we can create files in the jobfolder
-        filename = self.jobfolder+"/"+str(uuid.uuid4())
-#        print (filename)
+    def CheckWritable(self, folder):
+        filename = folder+"/"+str(uuid.uuid4())
         try:
             f = open(filename, "w");
             f.write("hej")
             f.close()
             os.remove(filename);
         except:
-            print ("Not allowed to write in folder", self.jobfolder)
-            return 0
-        
-        # Check that we can read the recipefolder
-        self.recipelist = os.listdir(self.recipefolder)
-        try:
-            self.recipelist = os.listdir(self.recipefolder)
-        except:
-            estring = "Cannot reach the folder '"+self.recipefolder+"'"
-            print (estring)
-            return 0
+            return False
+        return True
 
-        return 1
+    def CheckConfig(self):
+        # Open the main config file
+        self.startfolder = os.getcwd()
+        self.mconfigfilename = "pipemonitor.cfg"
+        try:
+            f = open(self.mconfigfilename,"r");
+            # First line in pipemonitor.cfg is the Job folder
+            self.mainconfigfile = f.readline().rstrip();
+            self.recipefolder = f.readline().rstrip();
+            f.close()
+        except:
+            estring = "Monitor Configuration file '"+self.mconfigfilename+"' not found"
+            print (estring)
+            return False;
+        
+        # Read the main config file
+        try:
+            f = open(self.mainconfigfile,"r")
+            self.jobfolder = f.readline().rstrip();
+            self.braintopfolder = f.readline().rstrip();
+            f.close()
+        except:
+            estring = "Main Configuration File '"+self.mainconfigfile+"' not found"
+            print (estring)
+            return False;
+
+        # Check that we can create files in the jobfolder
+        # Check that we can create files in the jobfolder
+        if (self.CheckWritable(self.jobfolder)==False):
+            print ("Not allowed to write in folder", self.jobfolder)
+            return False
+        # Check that we can write files in the brainsfolder
+        if (self.CheckWritable(self.braintopfolder)==False):
+            print ("Not allowed to write in folder", self.braintopfolder)
+            return False
+        
+        # Check that the Recipe Folder exists
+        try:
+            l = os.listdir(self.recipefolder)
+        except:
+            estring = "Recipe Folder '"+self.recipefolder+"' not found"
+            print (estring)
+            return False;
+
+        # Create 'current' and 'finished' in the jobfolder
+        currentfolder = self.jobfolder+"/current"
+        try:
+            l = os.listdir(currentfolder)
+        except:
+            try:
+                os.mkdir(currentfolder)
+            except:
+                estring = "Cannot create folder "+currentfolder
+                return False
+        finishedfolder  = self.jobfolder+"/finished"
+        try:
+            l = os.listdir(finishedfolder)
+        except:
+            try:
+                os.mkdir(finishedfolder)
+            except:
+                estring = "Cannot create folder "+finishedfolder
+                return False
+                
+        return True
 
     # Re-writes the configuration file; used when the user changes
     # jobdir or brainsdir
@@ -244,6 +281,22 @@ def main():
     monitor = Monitor()
     # Validate configuration
     if (not monitor.CheckConfig()):
+        print ("The file 'pipemonitor.cfg' should have two lines:")
+        print ("line 1: The folder where the main configuration file 'pipeline.cfg' is located")
+        print ("line 2: The Recipe Folder where the job descriptions are located.")
+        print ("        This folder may be local to the computer running the Monitor.")
+        print ("        It is never used by the Workers.");
+        print ("")
+        print ("The main configuration file should have the following layout")
+        print ("line 1: The Job Folder which will be used to communicate information about")
+        print ("        jobs. This folder must be the same on every computer used. This can")
+        print ("        be accomplished by using symbolic links on linux (the ln -s command) or")
+        print ("        on Windows by selecting shared folders in a smart way.")
+        print ("        NOTE: Each used computer MUST have write access to this folder and subfolders")
+        print ("line 2: The Brains Folder (where the data for processing will be available")
+        print ("        See the Job Folder above: same rules for naming and access")
+        print ("")
+        
         sys.exit();
 
     app = wx.App(False)

@@ -68,3 +68,14 @@ sudo snap install pycharm-community --classic
 sudo apt-get install python3-distutils
 
 
+___________________________________________________________________________
+Matlab windows
+___________________________________________________________________________
+Install Matlab.
+Install the python matlab module:
+  Start a Command Prompt as Administrator
+  cd \Program Files\Matlab\R2...\extern\engines\python
+  python setup.py install
+
+After this you should be able to start the python interpreter and do:
+import matlab
