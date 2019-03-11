@@ -9,65 +9,142 @@ import uuid
 from time import sleep
 import random
 import subprocess
+import matlab.engine
+lastcallnewline = True
+def consoleprint_cr(s):
+    global lastcallnewline
+    sys.stdout.write("\r")
+    sys.stdout.write(s)
+    sys.stdout.flush()
+    lastcallnewline = False
+
+def consoleprint_nl(s):
+    global lastcallnewline
+    if not lastcallnewline:
+        print("\n")
+    print (s)
+    lastcallnewline = True
 
 class PipeJob:
     def __init__(self, jobfile, startfolder):
         self.startfolder = startfolder # id of the current worker program
         self.running = True
         self.jobname = jobfile
-        self.c = random.randint(2,6);
         # Get the recipe
         f = open(jobfile,"r");
         self.brainfolder = f.readline().rstrip();
         self.logfilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".log"
+        print 99, self.logfilename
         self.statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
         self.brainname = os.path.basename(self.brainfolder);
         self.command = []
+        self.matlabused = False
         while(1):
             cmd = f.readline().rstrip()
             if cmd == "":
                 break;
             self.command.append(cmd);
+            if cmd.find("MATLAB") >= 0:
+                self.matlabused = True
         self.currentstep = 0
+        self.matlabengine = None
+        # open a fresh logfile
         self.logfile = open(self.logfilename,'w')
+        self.logfile.close()
+
+    def startmatlab(self, command):
+        consoleprint_nl("start matlab")
+        scriptname = command[1];
+        parameterlist = []
+        self.matlabreturnvariable = ""
+        for i in range(2, len(command)):
+            param = command[i].split('=')
+            if len(param) != 2:
+                consoleprint_nl('syntax error: '+command[i])
+            if param[0]=='RET':
+                self.matlabreturnvariable = param[1]
+            else:
+                parameterlist.append(param)
+
+        for i in range(0,len(parameterlist)):
+            consoleprint_nl(parameterlist[i][0] + " = " + parameterlist[i][1])
+            self.matlabengine.workspace[parameterlist[i][0]] = parameterlist[i][1]
+        self.future = self.matlabengine.run(scriptname, nargout=0, async=True)
 
     def start(self):
-        self.currentcommand = self.command[self.currentstep]
-        os.chdir(self.brainfolder)
-        print (self.brainfolder)
-        args = self.currentcommand.split()
-        print (os.path.basename(self.brainfolder), self.c, args)
-        if (os.name == 'nt'):
-            self.process = subprocess.Popen(args, 0, None, None, self.logfile, shell=True)
-        else:
-            self.process = subprocess.Popen(args, 0, None, None, self.logfile)
+        if self.matlabused and self.currentstep == 0:
+            f = open(self.statefilename, "w");
+            f.write("Starting the Matlab engine");
+            f.close()
+            self.matlabengine = matlab.engine.start_matlab()
 
-        self.currentstep = self.currentstep + 1
-        statestring = str(self.currentstep)+"/"+str(len(self.command))+"    "+self.brainname;
+        self.currentcommand = self.command[self.currentstep]
+
+        statestring = str(self.currentstep+1)+"/"+str(len(self.command))+"    "+self.brainname;
         statestring = statestring + "    " + self.startfolder;
         f = open(self.statefilename, "w");
         f.write(statestring);
         f.close()
+        
+        args = self.currentcommand.split()
+        consoleprint_nl(self.brainfolder+" "+os.path.basename(self.brainfolder))
+
+        self.matlabcommand = False
+        consoleprint_nl("before "+self.currentcommand)
+        self.logmessage("started " + self.currentcommand)
+        os.chdir(self.brainfolder);
+        if (args[0] == "MATLAB"):
+            self.matlabcommand = True
+            self.startmatlab(args)
+        else:
+            # open the logfile for use in subprocess
+            self.logfile = open(self.logfilename,'a')
+            if (os.name == 'nt'):
+                self.process = subprocess.Popen(args, 0, None, None, self.logfile, shell=True)
+            else:
+                self.process = subprocess.Popen(args, 0, None, None, self.logfile)
+        consoleprint_nl("after "+self.currentcommand)
         return
 
+    def pollmatlab(self):
+        isdone = self.future.done();
+        if (isdone):
+            result = self.future.result()
+            if (result == None):
+                consoleprint_nl("Result = None"); 
+            else:
+                consoleprint_nl("Result = "+ str(result))
+            if self.matlabreturnvariable != "":
+                return self.matlabengine.workspace[self.matlabreturnvariable]
+            else:
+                return 'ready'
+        return None
+
+    def logmessage(self, s):
+        self.logfile = open(self.logfilename,'a')
+        self.logfile.write(s+"\n")
+        self.logfile.close()
+        
     def poll(self):
-        # Check the delay
-        if self.c > 0:
-            self.c = self.c - 1;
-        if self.c<=0:
             # poll the process
-            self.returncode = self.process.poll()
+            if (self.matlabcommand):
+                self.returncode = self.pollmatlab()
+            else:
+                self.returncode = self.process.poll()
             if (self.returncode == None):
                 return
-            self.logfile = open(self.logfilename,'a')
-            self.logfile.write(self.currentcommand+" terminated with return code "+str(self.returncode)+"\n")
+
+            if (not self.matlabcommand):
+                self.logfile.close() # close the logfile after use in subprocess
+
+            self.logmessage(self.currentcommand+" terminated with return code "+str(self.returncode))
+    
             # More commands
+            self.currentstep = self.currentstep + 1
             if (len(self.command) <= self.currentstep):
                 self.running = False
-                self.logfile.close()
                 return
             # Yes !
-            self.c = random.randint(2,6);
             self.start()
 
 class Worker:
@@ -147,8 +224,16 @@ class Worker:
 
     def Run(self):
         running = [] # list of running 'pipejob'
+        loopcount = 0
+        jobcount = 0;
         while (1):
-            print ("loop", len(running))
+            prevjobcount = jobcount
+            jobcount = len(running)
+            if (jobcount == prevjobcount):
+                consoleprint_cr("loop " + str(jobcount) + " : " + str(loopcount))
+                loopcount = loopcount + 1
+            else:
+                consoleprint_nl("loop : " + str(len(running)))
             # First make sure all possible jobs has been started
             while (len(running) < self.concurrent):
                 newjob = self.grabjob()
@@ -163,7 +248,7 @@ class Worker:
                 x.poll()
                 if (x.running == False):
                     running.remove(x);
-                    print (x.jobname, "finished")
+                    consoleprint_nl(x.jobname+" finished")
                     fromfile = x.jobname
                     to = self.jobfolder + "/finished/" + os.path.basename(fromfile)
                     os.rename(fromfile, to);

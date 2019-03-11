@@ -8,7 +8,7 @@ class GenerateTestdataDialog(wx.Dialog):
    def __init__(self, parent, title, controller):
       self.controller = controller
       super(GenerateTestdataDialog, self).__init__(parent, title = title, size = (250,150)) 
-      self.count = 5; # no of brains to create
+      self.count = 1; # no of brains to create
       panel = wx.Panel(self) 
 
       vbox = wx.BoxSizer(wx.VERTICAL)
@@ -34,4 +34,5 @@ class GenerateTestdataDialog(wx.Dialog):
             wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
       if dial.ShowModal() == wx.ID_YES:
           self.controller.CreateTestData(self.tc2.GetValue());
+          dial.Destroy()
           self.Destroy()

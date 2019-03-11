@@ -1,5 +1,5 @@
 import wx
-
+NEWNAME = "<new>"
 from dialog_newname import AskNameDialog
 
 class HandleRecipesDialog(wx.Dialog): 
@@ -48,7 +48,7 @@ class HandleRecipesDialog(wx.Dialog):
 
     def UpdateRecipeList(self):
         recipelist = self.controller.GetRecipeList()
-        recipelist.append("<new>")
+        recipelist.append(NEWNAME)
         self.recipelist.Set(recipelist)
         
     def SelectRecipe(self, event):
@@ -68,7 +68,7 @@ class HandleRecipesDialog(wx.Dialog):
     def Save(self, event):
         ix = self.recipelist.GetSelection()
         recipename = self.recipelist.GetString(ix)
-        if (recipename == "<new>"):
+        if (recipename == NEWNAME):
             recipename = self.AskForNewName("Save New Recipe", "")
         if (recipename != ""):
             res = self.controller.WriteRecipe(recipename, self.tc3.GetValue())
@@ -86,6 +86,8 @@ class HandleRecipesDialog(wx.Dialog):
     def Rename(self, event):
         ix = self.recipelist.GetSelection()
         recipename = self.recipelist.GetString(ix)
+        if (recipename == NEWNAME):
+            return
         newname = self.AskForNewName("Rename Recipe", recipename)
         if (newname != recipename):
             self.controller.RenameRecipe(recipename, newname)
@@ -96,6 +98,8 @@ class HandleRecipesDialog(wx.Dialog):
     def Delete(self, event):
         ix = self.recipelist.GetSelection()
         recipename = self.recipelist.GetString(ix)
+        if (recipename == NEWNAME):
+            return
         dial = wx.MessageDialog(None, 'You want to delete '+recipename+"?", 'WARNING!!!',
             wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
         if dial.ShowModal() == wx.ID_YES:
