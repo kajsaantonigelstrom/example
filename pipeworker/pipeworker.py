@@ -25,133 +25,45 @@ def consoleprint_nl(s):
     print (s)
     lastcallnewline = True
 
-class PipeJob:
-    def __init__(self, jobfile, startfolder):
-        self.startfolder = startfolder # id of the current worker program
+class PipeJobLauncher:
+    def __init__(self, jobfile):
         self.running = True
         self.jobname = jobfile
-        # Get the recipe
-        f = open(jobfile,"r");
-        self.brainfolder = f.readline().rstrip();
-        self.logfilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".log"
-        print 99, self.logfilename
-        self.statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
-        self.brainname = os.path.basename(self.brainfolder);
-        self.command = []
-        self.matlabused = False
-        while(1):
-            cmd = f.readline().rstrip()
-            if cmd == "":
-                break;
-            self.command.append(cmd);
-            if cmd.find("MATLAB") >= 0:
-                self.matlabused = True
-        self.currentstep = 0
-        self.matlabengine = None
-        # open a fresh logfile
-        self.logfile = open(self.logfilename,'w')
-        self.logfile.close()
-
-    def startmatlab(self, command):
-        consoleprint_nl("start matlab")
-        scriptname = command[1];
-        parameterlist = []
-        self.matlabreturnvariable = ""
-        for i in range(2, len(command)):
-            param = command[i].split('=')
-            if len(param) != 2:
-                consoleprint_nl('syntax error: '+command[i])
-            if param[0]=='RET':
-                self.matlabreturnvariable = param[1]
-            else:
-                parameterlist.append(param)
-
-        for i in range(0,len(parameterlist)):
-            consoleprint_nl(parameterlist[i][0] + " = " + parameterlist[i][1])
-            self.matlabengine.workspace[parameterlist[i][0]] = parameterlist[i][1]
-        self.future = self.matlabengine.run(scriptname, nargout=0, async=True)
-
+        # create logfile where the pythonprocess pipejob will print
+        self.logfilename = os.path.basename(jobfile)+".log"
+        self.logfile = open(self.logfilename, "w");
     def start(self):
-        if self.matlabused and self.currentstep == 0:
-            f = open(self.statefilename, "w");
-            f.write("Starting the Matlab engine");
-            f.close()
-            self.matlabengine = matlab.engine.start_matlab()
-
-        self.currentcommand = self.command[self.currentstep]
-
-        statestring = str(self.currentstep+1)+"/"+str(len(self.command))+"    "+self.brainname;
-        statestring = statestring + "    " + self.startfolder;
-        f = open(self.statefilename, "w");
-        f.write(statestring);
-        f.close()
-        
-        args = self.currentcommand.split()
-        consoleprint_nl(self.brainfolder+" "+os.path.basename(self.brainfolder))
-
-        self.matlabcommand = False
-        consoleprint_nl("before "+self.currentcommand)
-        self.logmessage("started " + self.currentcommand)
-        os.chdir(self.brainfolder);
-        if (args[0] == "MATLAB"):
-            self.matlabcommand = True
-            self.startmatlab(args)
+        consoleprint_nl("starting job "+self.jobname)
+        args = []
+        args.append("python")
+        args.append("pipejob.py")
+        args.append(self.jobname)
+        if (os.name == 'nt'):
+            self.process = subprocess.Popen(args, 0, None, None, self.logfile, shell=True)
         else:
-            # open the logfile for use in subprocess
-            self.logfile = open(self.logfilename,'a')
-            if (os.name == 'nt'):
-                self.process = subprocess.Popen(args, 0, None, None, self.logfile, shell=True)
-            else:
-                self.process = subprocess.Popen(args, 0, None, None, self.logfile)
-        consoleprint_nl("after "+self.currentcommand)
+            self.process = subprocess.Popen(args, 0, None, None, self.logfile)
+        consoleprint_nl("job started "+self.jobname)
         return
-
-    def pollmatlab(self):
-        isdone = self.future.done();
-        if (isdone):
-            result = self.future.result()
-            if (result == None):
-                consoleprint_nl("Result = None"); 
-            else:
-                consoleprint_nl("Result = "+ str(result))
-            if self.matlabreturnvariable != "":
-                return self.matlabengine.workspace[self.matlabreturnvariable]
-            else:
-                return 'ready'
-        return None
-
-    def logmessage(self, s):
-        self.logfile = open(self.logfilename,'a')
-        self.logfile.write(s+"\n")
-        self.logfile.close()
         
     def poll(self):
-            # poll the process
-            if (self.matlabcommand):
-                self.returncode = self.pollmatlab()
-            else:
-                self.returncode = self.process.poll()
-            if (self.returncode == None):
-                return
-
-            if (not self.matlabcommand):
-                self.logfile.close() # close the logfile after use in subprocess
-
-            self.logmessage(self.currentcommand+" terminated with return code "+str(self.returncode))
-    
-            # More commands
-            self.currentstep = self.currentstep + 1
-            if (len(self.command) <= self.currentstep):
-                self.running = False
-                return
-            # Yes !
-            self.start()
+        # poll the process
+        self.returncode = self.process.poll()
+        if (self.returncode == None):
+            return
+        self.logfile.close()
+        self.running = False
+        return
 
 class Worker:
+    def __init__(self):
+        self.logfilestoremove = []
+
     def grabjob(self):
         # Find a jobfile and move it to 'current
-        os.chdir(self.jobfolder);
+        savedir = os.getcwd();
+        os.chdir(self.jobfolder)
         joblist = filter(os.path.isfile, os.listdir(self.jobfolder))
+        os.chdir(savedir)
         for jobfile in joblist:
             fromfile = self.jobfolder + "/" + jobfile
             to = self.jobfolder + "/current/" + jobfile
@@ -238,7 +150,7 @@ class Worker:
             while (len(running) < self.concurrent):
                 newjob = self.grabjob()
                 if (newjob != ""):
-                    jobobject = PipeJob(newjob, self.startfolder)
+                    jobobject = PipeJobLauncher(newjob)
                     jobobject.start();
                     running.append(jobobject)
                 else:
@@ -247,12 +159,38 @@ class Worker:
             for x in running:
                 x.poll()
                 if (x.running == False):
-                    running.remove(x);
-                    consoleprint_nl(x.jobname+" finished")
+                    # move the job file to 'finished'
                     fromfile = x.jobname
                     to = self.jobfolder + "/finished/" + os.path.basename(fromfile)
                     os.rename(fromfile, to);
+
+                    consoleprint_nl(x.jobname+" finished")
+                    # print the output from pipejob.py
+                    try:
+                        f = open(x.logfilename, "r")
+                        print (f.read());
+                        f.close()
+                    except:
+                        print ("Error reading ", x.logfilename)
+                    self.logfilestoremove.append(x.logfilename)
+                    running.remove(x);
             sleep(1);
+            self.removelogfiles()
+            
+    def removelogfiles(self):
+        # unknown timing problem sometimes refuse to remove log file
+        if len(self.logfilestoremove) == 0:
+            return;
+        for lf in self.logfilestoremove:
+            self.logfilestoremove.remove(lf)
+            try:
+                os.remove(lf)
+                print lf,"removed"
+            except:
+                # couldnt: add it again
+                self.logfilestoremove.append(lf)
+                print lf,"NOT removed"
+            return; # remove only one per loop
 
 def main():
     # Create a Worker object
