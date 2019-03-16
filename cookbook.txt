@@ -1,0 +1,29 @@
+Step 1 : Develop a Recipe
+
+Create a Job file by hand:
+line 1 : Full path to the folder where the brain data are
+Line 2-n : The recipe 
+
+From command line, go to the pipeworker folder:
+cd <...>/example/pipeworker
+
+To test the Recipe:
+python pipejob.py <full path to the job file>
+
+Step 2 : When the Recipe developed it is time to set it in production
+
+2a : Start Pipeworkers on the servers you want to use.
+Prerequisites: 
+- All software needed to run the recipe must be installed on the server
+- The two python scripts 'pipeworker.py' and 'pipejob.py' copied to the server
+  (Copy them to the folder where you come with the ssh command)
+- In the same folder as pipeworker.py, create the pipeworker.cfg file
+  line 1 : Full path to the Job Folder
+  line 2 : Max number of concurrent jobs for this server
+
+2b : Start the PipeMonitor on the control computer
+- Create a recipe (Function menu : Handle recipes) and copy the Recipe part of your tested job file
+- Check that Job Folder and Brains Folder are correct (bottom part of the Monitor window)
+- Start the jobs (Function menu : Generate jobs). In the combobox, select the Recipe you want to run and press
+  Generate jobs
+
