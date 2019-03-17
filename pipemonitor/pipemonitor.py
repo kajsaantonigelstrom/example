@@ -38,7 +38,7 @@ class Monitor:
                 self.brainfolder = f.readline().rstrip();
                 f.close()
             except:
-                print ("Error opening", jobfile)
+                # just moved from current
                 continue;
             statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
             try:
@@ -46,8 +46,7 @@ class Monitor:
                 self.currentjobs.append(f.readline().rstrip())
                 f.close()
             except:
-                estring = "Error opening " + statefilename
-                self.currentjobs.append(estring)
+                pass
 
     # Check access rights for folders to be used
     def CheckWritable(self, folder):
@@ -72,8 +71,7 @@ class Monitor:
             self.recipefolder = f.readline().rstrip();
             f.close()
         except:
-            estring = "Monitor Configuration file '"+self.mconfigfilename+"' not found"
-            print (estring)
+            self.errormessage = "Monitor Configuration file '"+self.mconfigfilename+"' not found"
             return False;
         
         # Read the main config file
@@ -83,26 +81,24 @@ class Monitor:
             self.braintopfolder = f.readline().rstrip();
             f.close()
         except:
-            estring = "Main Configuration File '"+self.mainconfigfile+"' not found"
-            print (estring)
+            self.errormessage = "Main Configuration File '"+self.mainconfigfile+"' not found"
             return False;
 
         # Check that we can create files in the jobfolder
         # Check that we can create files in the jobfolder
         if (self.CheckWritable(self.jobfolder)==False):
-            print ("Not allowed to write in folder", self.jobfolder)
+            self.errormessage = "Not allowed to write in folder " + self.jobfolder
             return False
         # Check that we can write files in the brainsfolder
         if (self.CheckWritable(self.braintopfolder)==False):
-            print ("Not allowed to write in folder", self.braintopfolder)
+            self.errormessage = "Not allowed to write in folder " + self.braintopfolder
             return False
         
         # Check that the Recipe Folder exists
         try:
             l = os.listdir(self.recipefolder)
         except:
-            estring = "Recipe Folder '"+self.recipefolder+"' not found"
-            print (estring)
+            self.errormessage = "Recipe Folder '"+self.recipefolder+"' not found"
             return False;
 
         # Create 'current' and 'finished' in the jobfolder
@@ -113,7 +109,7 @@ class Monitor:
             try:
                 os.mkdir(currentfolder)
             except:
-                estring = "Cannot create folder "+currentfolder
+                self.errormessage = "Cannot create folder "+currentfolder
                 return False
         finishedfolder  = self.jobfolder+"/finished"
         try:
@@ -122,7 +118,7 @@ class Monitor:
             try:
                 os.mkdir(finishedfolder)
             except:
-                estring = "Cannot create folder "+finishedfolder
+                self.errormessage = "Cannot create folder "+finishedfolder
                 return False
                 
         return True
@@ -296,7 +292,9 @@ def main():
         print ("line 2: The Brains Folder (where the data for processing will be available")
         print ("        See the Job Folder above: same rules for naming and access")
         print ("")
-        
+        print ("******************************************************************")
+        print (monitor.errormessage)
+        print ("******************************************************************")
         sys.exit();
 
     app = wx.App(False)

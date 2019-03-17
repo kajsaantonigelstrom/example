@@ -6,7 +6,7 @@ from dialog_handlerecipes import HandleRecipesDialog
 
 class MainWindow(wx.Frame):
     def __init__(self, parent, monitor):
-        super(MainWindow, self).__init__(parent, title="hej", size=(500,500))
+        super(MainWindow, self).__init__(parent, title="hej", size=(650,650))
 
         menubar = wx.MenuBar()
         file = wx.Menu()

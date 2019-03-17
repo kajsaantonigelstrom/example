@@ -33,7 +33,6 @@ class PipeJobLauncher:
         self.logfilename = os.path.basename(jobfile)+".log"
         self.logfile = open(self.logfilename, "w");
     def start(self):
-        consoleprint_nl("starting job "+self.jobname)
         args = []
         args.append("python")
         args.append("pipejob.py")
@@ -57,7 +56,8 @@ class PipeJobLauncher:
 class Worker:
     def __init__(self):
         self.logfilestoremove = []
-
+        self.logfilename = os.getcwd()+"/pipeworker.log"
+        self.errormessage = ""
     def grabjob(self):
         # Find a jobfile and move it to 'current
         savedir = os.getcwd();
@@ -71,6 +71,7 @@ class Worker:
                 os.rename(fromfile, to)
                 return to
             except:
+                self.logmessage("Failed to move "+fromfile+" to "+tofile)
                 pass
         return ""
         
@@ -92,8 +93,8 @@ class Worker:
         try:
             f = open("pipeworker.cfg", "r");
         except:
-            print ("Configuration file 'pipeworker.cfg' is missing")
-            return 0;
+            self.errormessage = "Configuration file 'pipeworker.cfg' is missing"
+            return False;
         # First line is the path to the Main Config file
         mconfigfilename = f.readline().rstrip();
         # Second line is a digit for number of max concurrent processes
@@ -103,9 +104,8 @@ class Worker:
         try:
             f = open(mconfigfilename,"r");
         except:
-            estring = "Main Configuration file '"+mconfigfilename+"' not found"
-            print (estring)
-            return 0;
+            self.errormessage = "Main Configuration file '"+mconfigfilename+"' not found"
+            return False;
 
         # Main config file has jobfolder and brainsfolder
         self.jobfolder = f.readline().rstrip();
@@ -114,24 +114,23 @@ class Worker:
         
         # Check that we can create files in the jobfolder
         if (self.CheckWritable(self.jobfolder)==False):
-            print ("Not allowed to write in folder", self.jobfolder)
+            self.errormessage = "Not allowed to write in folder " + self.jobfolder
             return False
         # Check that we can create files in the brainsfolder
         if (self.CheckWritable(self.braintopfolder)==False):
-            print ("Not allowed to write in folder", self.braintopfolder)
+            self.errormessage = "Not allowed to write in folder " + self.braintopfolder
             return False
             
         self.concurrent = 1;
         if (processes!=""):
             try:
                 self.concurrent = int(processes)
-                print ("Number of concurrent processes is set to", self.concurrent)
+                self.errormessage = "Number of concurrent processes is set to " + str(self.concurrent)
             except:
-                estring = "'"+processes+"' is not a number (defines no of concurrent processes)"
-                print (estring)
-                print ("Number of concurrent processes will default to", self.concurrent)
+                print ("'"+processes+"' is not a number (defines no of concurrent processes)")
+                print ("Number of concurrent processes will default to " + str(self.concurrent))
         else:
-            print ("Number of concurrent processes will default to", self.concurrent)
+            print ("Number of concurrent processes will default to " + str(self.concurrent))
         return 1
 
     def Run(self):
@@ -152,6 +151,7 @@ class Worker:
                 if (newjob != ""):
                     jobobject = PipeJobLauncher(newjob)
                     jobobject.start();
+                    self.logmessage("Job "+newjob+" started")
                     running.append(jobobject)
                 else:
                     break;
@@ -162,21 +162,30 @@ class Worker:
                     # move the job file to 'finished'
                     fromfile = x.jobname
                     to = self.jobfolder + "/finished/" + os.path.basename(fromfile)
-                    os.rename(fromfile, to);
-
+                    try:
+                        os.rename(fromfile, to);
+                    except:
+                        self.logmessage("Failed to move "+fromfile+" to "+tofile);
                     consoleprint_nl(x.jobname+" finished")
                     # print the output from pipejob.py
                     try:
-                        f = open(x.logfilename, "r")
-                        print (f.read());
-                        f.close()
+                        self.logmessage("log from "+x.logfilename)
+                        with open(x.logfilename, "r") as f:
+                            self.logmessage(f.read());
                     except:
-                        print ("Error reading ", x.logfilename)
+                        estring = "Error reading "+ x.logfilename;
+                        print (estring)
+                        self.logmessage(estring)
                     self.logfilestoremove.append(x.logfilename)
                     running.remove(x);
             sleep(1);
             self.removelogfiles()
             
+    def logmessage(self, s):
+        self.logfile = open(self.logfilename,'a')
+        self.logfile.write(s+"\n")
+        self.logfile.close()
+
     def removelogfiles(self):
         # unknown timing problem sometimes refuse to remove log file
         if len(self.logfilestoremove) == 0:
@@ -185,11 +194,11 @@ class Worker:
             self.logfilestoremove.remove(lf)
             try:
                 os.remove(lf)
-                print lf,"removed"
+                self.logmessage(lf+" removed")
             except:
                 # couldnt: add it again
                 self.logfilestoremove.append(lf)
-                print lf,"NOT removed"
+                self.logmessage(lf+" NOT removed")
             return; # remove only one per loop
 
 def main():
@@ -210,6 +219,9 @@ def main():
         print ("line 2: The Brains Folder (where the data for processing will be available")
         print ("        See the Job Folder above: same rules for naming and access")
         print ("")
+        print ("******************************************************************")
+        print (w.errormessage)
+        print ("******************************************************************")
         sys.exit();
 
     w.Run()

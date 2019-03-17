@@ -3,4 +3,5 @@ __pycache__
 .swp
 *.cfg
 *.pyc
+pipeworker/pipeworker.log
 

@@ -1,4 +1,5 @@
-﻿# -*- coding: utf-8 -*-
+﻿
+# -*- coding: utf-8 -*-
 # This file contains two classes
 # The Worker which watches the job folder for new jobs to grab
 # The PipeJob represents a job and performs the actual process
@@ -13,20 +14,6 @@ import platform
 import StringIO
 
 lastcallnewline = True
-
-def consoleprint_cr(s):
-    global lastcallnewline
-    sys.stdout.write("\r")
-    sys.stdout.write(s)
-    sys.stdout.flush()
-    lastcallnewline = False
-
-def consoleprint_nl(s):
-    global lastcallnewline
-    if not lastcallnewline:
-        print("\n")
-    print (s)
-    lastcallnewline = True
 
 class PipeJob:
     def __init__(self, jobfile):
@@ -56,21 +43,21 @@ class PipeJob:
         self.logfile.close()
 
     def startmatlab(self, command):
-        consoleprint_nl("start matlab")
+        print "start matlab"
         scriptpath, scriptname = ntpath.split(command[1])
         parameterlist = []
         self.matlabreturnvariable = ""
         for i in range(2, len(command)):
             param = command[i].split('=')
             if len(param) != 2:
-                consoleprint_nl('syntax error: '+command[i])
+                print('syntax error: '+command[i])
             if param[0]=='RET':
                 self.matlabreturnvariable = param[1]
             else:
                 parameterlist.append(param)
 
         for i in range(0,len(parameterlist)):
-            consoleprint_nl(parameterlist[i][0] + " = " + parameterlist[i][1])
+            print(parameterlist[i][0] + " = " + parameterlist[i][1])
             self.matlabengine.workspace[parameterlist[i][0]] = parameterlist[i][1]
 
         self.matlabengine.chdir(self.brainfolder);
@@ -78,32 +65,31 @@ class PipeJob:
             self.matlabengine.addpath(scriptpath)
         self.out = StringIO.StringIO()
         self.err = StringIO.StringIO()
+        print ("Run MATLAB "+scriptname)
         self.future = self.matlabengine.run(scriptname, nargout=0, async=True, stdout=self.out,stderr=self.err)
+        
+    def writestate(self, str):
+        f = open(self.statefilename, "w");
+        f.write(str);
+        f.close()
         
     def start(self):
         if self.matlabused and self.currentstep == 0:
-            statestring = "Starting the Matlab engine" + "    " + self.brainname + "    " + self.myid;
-            f = open(self.statefilename, "w");
-            f.write(statestring);
-            f.close()
-            consoleprint_nl("start matlab")
+            self.writestate("Starting the Matlab engine" + "    " + self.brainname + "    " + self.myid)
+            print "Starting Matlab Engine"
             self.matlabengine = matlab.engine.start_matlab()
-            consoleprint_nl("matlab started")
+            print "Matlab Started"
 
         self.currentcommand = self.command[self.currentstep]
-
-        statestring = str(self.currentstep+1)+"/"+str(len(self.command)) + "    "+self.brainname + "    " + self.myid;
-        f = open(self.statefilename, "w");
-        f.write(statestring);
-        f.close()
-        
         args = self.currentcommand.split()
-        consoleprint_nl(self.brainfolder+" "+os.path.basename(self.brainfolder))
+
+        self.writestate(str(self.currentstep+1)+"/"+str(len(self.command)) + " "+self.brainname + " " + self.myid + " '" + self.currentcommand +"'")
 
         self.matlabcommand = False
-        consoleprint_nl("before "+self.currentcommand)
         self.logmessage("started " + self.currentcommand)
         os.chdir(self.brainfolder);
+        print(self.brainfolder+" "+os.path.basename(self.brainfolder))
+        print("before "+self.currentcommand)
         if (args[0] == "MATLAB"):
             self.matlabcommand = True
             self.startmatlab(args)
@@ -114,28 +100,31 @@ class PipeJob:
                 self.process = subprocess.Popen(args, 0, None, None, self.logfile_process, shell=True)
             else:
                 self.process = subprocess.Popen(args, 0, None, None, self.logfile_process)
-        consoleprint_nl("after "+self.currentcommand)
+        print("after "+self.currentcommand)
         return
 
     def pollmatlab(self):
         isdone = self.future.done();
         if (isdone):
             try:
-                print 1
                 result = self.future.result()
-                self.logmessage("Output from MATLAB")
-                self.logmessage(self.out.getvalue())
+                outstr = self.out.getvalue()
                 errstr = self.err.getvalue()
+
+                self.logmessage("Output from MATLAB", False)
+                self.logmessage(outstr, False)
                 if len(errstr) > 0:
                     self.logmessage("Error from MATLAB")
-                    self.logmessage(errstr)
+                    self.logmessage(errstr, True)
                 if (result == None):
-                    consoleprint_nl("Result = None"); 
+                    self.logmessage("Result = None"); 
                 else:
-                    consoleprint_nl("Result = "+ str(result))
+                    self.logmessage("Result = "+ str(result))
                 if self.matlabreturnvariable != "":
+                    self.logmessage("RET="+self.matlabengine.workspace[self.matlabreturnvariable])
                     return self.matlabengine.workspace[self.matlabreturnvariable]
                 else:
+                    self.logmessage("No return value from MATLAB");
                     return 'ready'
             except:
                 self.logmessage("Exception from MATLAB")
@@ -148,10 +137,12 @@ class PipeJob:
                 return 'exception'
         return None
 
-    def logmessage(self, s):
+    def logmessage(self, s, doprint=True):
         self.logfile = open(self.logfilename,'a')
         self.logfile.write(s+"\n")
         self.logfile.close()
+        if doprint:
+            print s
         
     def poll(self):
             # poll the process
@@ -167,7 +158,11 @@ class PipeJob:
                 self.logfile_process = open(self.logfilename_process,'r')
                 l = self.logfile_process.read()
                 self.logmessage(l)
-                
+                self.logfile_process.close() # close the logfile after use in subprocess
+                try:
+                    os.remove(self.logfilename_process)
+                except:
+                    pass
             self.logmessage(self.currentcommand+" terminated with return code "+str(self.returncode))
     
             # More commands
@@ -176,6 +171,7 @@ class PipeJob:
                 self.running = False
                 if (self.matlabengine != None):
                     self.matlabengine.quit()
+                self.writestate("Finished "+self.brainname + " " + self.myid)
                 return
             # Yes !
             self.start()
