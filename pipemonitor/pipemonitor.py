@@ -21,32 +21,49 @@ class Monitor:
         self.jobqueue = []
         self.finishedjobs = []
 
+    def readstatestring(self, jobfile):
+        try:
+            f = open(jobfile,"r");
+            self.brainfolder = f.readline().rstrip();
+            f.close()
+        except:
+            return ""
+
+        statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
+        try:
+            f = open(statefilename,"r")
+            state = f.readline().rstrip()
+            f.close()
+            return state
+        except:
+            return ""
+        
     # Called periodically to check the state of jobs
     # Updates the lists that will be shown in the UI
     def updatebrainstate(self):
         os.chdir(self.jobfolder)
         self.jobqueue = filter(os.path.isfile, os.listdir(self.jobfolder))
+
+        # For the finished jobs we want to present if the job went OK/Error
         os.chdir(self.jobfolder+'/finished')
         self.finishedjobs = filter(os.path.isfile, os.listdir(self.jobfolder+'/finished'))
+        for ix in range(0,len(self.finishedjobs)):
+            statestring = self.readstatestring(self.finishedjobs[ix])
+            if (statestring==""):
+                print("Cannot read state for "+self.finishedjobs[ix])
+                continue
+            if (statestring.find("ERROR") >= 0):
+                self.finishedjobs[ix] = self.finishedjobs[ix] + " " + statestring
+
         # For the current jobs we want to present the .state file
         os.chdir(self.jobfolder+'/current')
         self.currentjobs = []
         jobfiles = filter(os.path.isfile, os.listdir(self.jobfolder+'/current'))
         for jobfile in jobfiles:
-            try:
-                f = open(jobfile,"r");
-                self.brainfolder = f.readline().rstrip();
-                f.close()
-            except:
-                # just moved from current
+            statestring = self.readstatestring(jobfile)
+            if (statestring == ""):
                 continue;
-            statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
-            try:
-                f = open(statefilename,"r")
-                self.currentjobs.append(f.readline().rstrip())
-                f.close()
-            except:
-                pass
+            self.currentjobs.append(statestring)
 
     # Check access rights for folders to be used
     def CheckWritable(self, folder):

@@ -166,7 +166,11 @@ class Worker:
                         os.rename(fromfile, to);
                     except:
                         self.logmessage("Failed to move "+fromfile+" to "+tofile);
-                    consoleprint_nl(x.jobname+" finished")
+                    if x.returncode == 0:
+                        consoleprint_nl(x.jobname+" finished")
+                    else:
+                        consoleprint_nl("Error in "+x.jobname+", Check \"the brain's\" logfile")
+                        
                     # print the output from pipejob.py
                     try:
                         self.logmessage("log from "+x.logfilename)

@@ -14,9 +14,57 @@ import platform
 import StringIO
 
 lastcallnewline = True
+class Dictionary:
+    def __init__(self):
+        self.mydict = {}
+        self.errorstring = ""
+        return
+    def Translate(self, cmd):
+        restofstring = cmd
+        reply = ""
+        pos=restofstring.find("%")
+        if pos < 0:
+            return cmd
+        pos2 = -1
+        while pos >= 0:
+            if pos >= 0:
+                reply = reply + restofstring[:pos]
+            restofstring = restofstring[pos+1:]
+            pos2 = restofstring.find("%")
+            if pos2 < 0:    
+                self.errorstring = "ERROR: Uneven number of '%' in "+cmd
+                raise "Syntax error"
+            keyword = restofstring[:pos2]
+            try:
+                reply = reply + self.mydict[keyword]
+            except:
+                self.errorstring = "ERROR: Cannot find replacement for "+keyword+ " in "+cmd
+                raise "Syntax error"
+                
+            restofstring = restofstring[pos2+1:]
+
+            pos=restofstring.find("%")
+        print reply
+        return reply
+
+    def addDefine(self, define):
+        param = define.split('=')
+        if len(param) == 1:
+            self.errorstring = "ERROR: Missing '=' in .DEFINE "+define
+            raise "Syntax error"
+        if len(param) > 2:
+            self.errorstring = "ERROR: Too many '=' in .DEFINE "+define
+            raise "Syntax error"
+
+        self.mydict[param[0]] = param[1]
+        print self.mydict
+        return
 
 class PipeJob:
     def __init__(self, jobfile):
+        self.replacer = Dictionary()
+        self.pendingerror = False
+        
         self.myid = platform.node() # id of this computer
         self.running = True
         self.jobname = jobfile
@@ -24,16 +72,31 @@ class PipeJob:
         f = open(jobfile,"r");
         self.brainfolder = f.readline().rstrip();
         self.logfilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".log"
-        self.logfilename_process = self.brainfolder+"/"+os.path.basename(self.brainfolder)+"_process.log"
+        self.logfilename_stdout = self.brainfolder+"/"+os.path.basename(self.brainfolder)+"_stdout.log"
+        self.logfilename_stderr = self.brainfolder+"/"+os.path.basename(self.brainfolder)+"_stderr.log"
         self.statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
         self.brainname = os.path.basename(self.brainfolder);
         self.command = []
         self.matlabused = False
+        self.replacer.addDefine("BRAIN="+os.path.basename(self.brainfolder))
+        self.replacer.addDefine("BRAINFOLDER="+self.brainfolder)
+
         while(1):
             cmd = f.readline().rstrip()
             if cmd == "":
                 break;
-            self.command.append(cmd);
+            if cmd[0]=="#":
+                continue
+            try:
+                if cmd.find(".DEFINE") >= 0:
+                    self.replacer.addDefine(cmd[8:])
+                else:
+                    self.command.append(self.replacer.Translate(cmd))
+            except:
+                print (self.replacer.errorstring)
+                self.writestate(self.replacer.errorstring)
+                sys.exit(-1)
+
             if cmd.find("MATLAB") >= 0:
                 self.matlabused = True
         self.currentstep = 0
@@ -41,6 +104,8 @@ class PipeJob:
         # open a fresh logfile
         self.logfile = open(self.logfilename,'w')
         self.logfile.close()
+        print 153513
+        print self.command
 
     def startmatlab(self, command):
         print "start matlab"
@@ -95,11 +160,12 @@ class PipeJob:
             self.startmatlab(args)
         else:
             # open the logfile for use in subprocess
-            self.logfile_process = open(self.logfilename_process,'w')
+            self.logfile_stdout = open(self.logfilename_stdout,'w')
+            self.logfile_stderr = open(self.logfilename_stderr,'w')
             if (os.name == 'nt'):
-                self.process = subprocess.Popen(args, 0, None, None, self.logfile_process, shell=True)
+                self.process = subprocess.Popen(args, 0, None, None, self.logfile_stdout, self.logfile_stderr, shell=True)
             else:
-                self.process = subprocess.Popen(args, 0, None, None, self.logfile_process)
+                self.process = subprocess.Popen(args, 0, None, None, self.logfile_stdout, self.logfile_stderr)
         print("after "+self.currentcommand)
         return
 
@@ -110,12 +176,13 @@ class PipeJob:
                 result = self.future.result()
                 outstr = self.out.getvalue()
                 errstr = self.err.getvalue()
-
+                
                 self.logmessage("Output from MATLAB", False)
                 self.logmessage(outstr, False)
                 if len(errstr) > 0:
                     self.logmessage("Error from MATLAB")
                     self.logmessage(errstr, True)
+                    self.pendingerror = True
                 if (result == None):
                     self.logmessage("Result = None"); 
                 else:
@@ -150,17 +217,30 @@ class PipeJob:
                 self.returncode = self.pollmatlab()
             else:
                 self.returncode = self.process.poll()
+                if self.returncode != 0:
+                    self.pendingerror = True
+                    
             if (self.returncode == None):
                 return
 
             if (not self.matlabcommand):
-                self.logfile_process.close() # close the logfile after use in subprocess
-                self.logfile_process = open(self.logfilename_process,'r')
-                l = self.logfile_process.read()
+                self.logfile_stdout.close() # close the logfile after use in subprocess
+                self.logfile_stdout = open(self.logfilename_stdout,'r')
+                l = self.logfile_stdout.read()
                 self.logmessage(l)
-                self.logfile_process.close() # close the logfile after use in subprocess
+
+                self.logfile_stderr.close() # close the logfile after use in subprocess
+                self.logfile_stderr = open(self.logfilename_stderr,'r')
+                l = self.logfile_stderr.read()
+                if len(l) > 0:
+                    self.logmessage("Error");
+                    self.logmessage(l)
+
+                self.logfile_stdout.close() # close the logfile after use in subprocess
+                self.logfile_stdout.close() # close the logfile after use in subprocess
                 try:
-                    os.remove(self.logfilename_process)
+                    os.remove(self.logfilename_stdout)
+                    os.remove(self.logfilename_stderr)
                 except:
                     pass
             self.logmessage(self.currentcommand+" terminated with return code "+str(self.returncode))
@@ -171,7 +251,11 @@ class PipeJob:
                 self.running = False
                 if (self.matlabengine != None):
                     self.matlabengine.quit()
-                self.writestate("Finished "+self.brainname + " " + self.myid)
+                if self.pendingerror:
+                    self.writestate("ERROR: possible error "+self.brainname + " " + self.myid + " Check logfile")
+                else:
+                    self.writestate("Finished "+self.brainname + " " + self.myid)
+
                 return
             # Yes !
             self.start()
