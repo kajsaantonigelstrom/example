@@ -78,9 +78,10 @@ class PipeJob:
         self.brainname = os.path.basename(self.brainfolder);
         self.command = []
         self.matlabused = False
+	self.shellcommand = False
         self.replacer.addDefine("BRAIN="+os.path.basename(self.brainfolder))
         self.replacer.addDefine("BRAINFOLDER="+self.brainfolder)
-
+	os.chdir(self.brainfolder);
         while(1):
             cmd = f.readline().rstrip()
             if cmd == "":
@@ -104,7 +105,6 @@ class PipeJob:
         # open a fresh logfile
         self.logfile = open(self.logfilename,'w')
         self.logfile.close()
-        print 153513
         print self.command
 
     def startmatlab(self, command):
@@ -137,7 +137,6 @@ class PipeJob:
         f = open(self.statefilename, "w");
         f.write(str);
         f.close()
-        
     def start(self):
         if self.matlabused and self.currentstep == 0:
             self.writestate("Starting the Matlab engine" + "    " + self.brainname + "    " + self.myid)
@@ -151,21 +150,40 @@ class PipeJob:
         self.writestate(str(self.currentstep+1)+"/"+str(len(self.command)) + " "+self.brainname + " " + self.myid + " '" + self.currentcommand +"'")
 
         self.matlabcommand = False
+	self.shellcommand = False
         self.logmessage("started " + self.currentcommand)
-        os.chdir(self.brainfolder);
         print(self.brainfolder+" "+os.path.basename(self.brainfolder))
         print("before "+self.currentcommand)
         if (args[0] == "MATLAB"):
             self.matlabcommand = True
             self.startmatlab(args)
-        else:
+	elif args[0] == 'cd' or args[0] == 'export':
+	    self.shellcommand = True
+            if (len(args) != 2):
+	        self.logmessage(args[0]+": syntax error")
+		running = False
+                return 'exception'
+	    if args[0] == 'cd':
+		os.chdir(args[1])
+	    else: # export
+		env = args[1].split('=')
+		if (len(env) != 2):
+	            self.logmessage(args[0]+": syntax error")
+		    running = False
+                    return 'exception'
+		os.environ[env[0]]=env[1]
+		print 66
+		print os.environ['PATH']
+		print os.environ['YY']
+		print os.environ
+	else:
             # open the logfile for use in subprocess
             self.logfile_stdout = open(self.logfilename_stdout,'w')
             self.logfile_stderr = open(self.logfilename_stderr,'w')
             if (os.name == 'nt'):
-                self.process = subprocess.Popen(args, 0, None, None, self.logfile_stdout, self.logfile_stderr, shell=True)
+                self.process = subprocess.Popen(args, 0, None, None, self.logfile_stdout, self.logfile_stderr, env=os.environ, shell=True)
             else:
-                self.process = subprocess.Popen(args, 0, None, None, self.logfile_stdout, self.logfile_stderr)
+                self.process = subprocess.Popen(args, 0, None, None, self.logfile_stdout, self.logfile_stderr, env=os.environ)
         print("after "+self.currentcommand)
         return
 
@@ -213,7 +231,9 @@ class PipeJob:
         
     def poll(self):
             # poll the process
-            if (self.matlabcommand):
+	    if (self.shellcommand):
+		self.returncode = 0
+            elif (self.matlabcommand):
                 self.returncode = self.pollmatlab()
             else:
                 self.returncode = self.process.poll()
@@ -223,7 +243,7 @@ class PipeJob:
             if (self.returncode == None):
                 return
 
-            if (not self.matlabcommand):
+            if (not self.matlabcommand and not self.shellcommand):
                 self.logfile_stdout.close() # close the logfile after use in subprocess
                 self.logfile_stdout = open(self.logfilename_stdout,'r')
                 l = self.logfile_stdout.read()
