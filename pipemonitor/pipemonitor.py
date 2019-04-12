@@ -11,7 +11,7 @@ from mainwindow import MainWindow
 # removes the folder if possible
 def deletefiles(dir):
     os.chdir(dir);
-    l = filter(os.path.isfile, os.listdir(dir))
+    l = list(filter(os.path.isfile, os.listdir(dir)))
     for f in l:
         os.remove(dir+"/"+f)
 
@@ -42,11 +42,11 @@ class Monitor:
     # Updates the lists that will be shown in the UI
     def updatebrainstate(self):
         os.chdir(self.jobfolder)
-        self.jobqueue = filter(os.path.isfile, os.listdir(self.jobfolder))
+        self.jobqueue = list(filter(os.path.isfile, os.listdir(self.jobfolder)))
 
         # For the finished jobs we want to present if the job went OK/Error
         os.chdir(self.jobfolder+'/finished')
-        self.finishedjobs = filter(os.path.isfile, os.listdir(self.jobfolder+'/finished'))
+        self.finishedjobs = list(filter(os.path.isfile, os.listdir(self.jobfolder+'/finished')))
         for ix in range(0,len(self.finishedjobs)):
             statestring = self.readstatestring(self.finishedjobs[ix])
             if (statestring==""):
@@ -58,7 +58,7 @@ class Monitor:
         # For the current jobs we want to present the .state file
         os.chdir(self.jobfolder+'/current')
         self.currentjobs = []
-        jobfiles = filter(os.path.isfile, os.listdir(self.jobfolder+'/current'))
+        jobfiles = list(filter(os.path.isfile, os.listdir(self.jobfolder+'/current')))
         for jobfile in jobfiles:
             statestring = self.readstatestring(jobfile)
             if (statestring == ""):
@@ -186,7 +186,7 @@ class Monitor:
             return "Cannot open the recipe ',"+recipe+"'"
 
         os.chdir(self.braintopfolder)
-        brainlist = filter(os.path.isdir, os.listdir(self.braintopfolder))
+        brainlist = list(filter(os.path.isdir, os.listdir(self.braintopfolder)))
         for brain in brainlist:
             # Create a corresponding job file
             jobfile = self.jobfolder+"/"+brain+".job"
@@ -236,7 +236,7 @@ class Monitor:
     # extension (.rcp) that is used when storing them on disc
     def GetRecipeList(self):
         os.chdir(self.recipefolder)
-        rdir = filter(os.path.isfile, os.listdir(self.recipefolder))
+        rdir = list(filter(os.path.isfile, os.listdir(self.recipefolder)))
         for ix in range(0,len(rdir)):
             # mask away .rcp
             s = rdir[ix]
