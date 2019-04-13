@@ -10,8 +10,6 @@ cd <...>/example/pipeworker
 To test the Recipe:
 python pipejob.py <full path to the job file>
 
-Step 2 : When the Recipe developed it is time to set it in production
-
 2a : Start Pipeworkers on the servers you want to use.
 Prerequisites: 
 - All software needed to run the recipe must be installed on the server
@@ -27,3 +25,16 @@ Prerequisites:
 - Start the jobs (Function menu : Generate jobs). In the combobox, select the Recipe you want to run and press
   Generate jobs
 
+
+Recipe cookbook:
+1. You can use %BRAIN% in your recipe to refer to the current brain 
+sub-folder.
+2. You can use %BRAINFOLDER% in your recipe to refer to the 'Brains Folder'
+(as seen at the bottom of the pipemonitor UI.)
+3. You can add your own %X% by writing
+.DEFINE X=hej
+After this %X% will mean 'hej' in the recipe.
+4. Another way to do the same is the 'export' statement
+export X=hej
+The difference is that this will be added to the 'process environment' and thus
+be accessable by subsequent commands in recipe
