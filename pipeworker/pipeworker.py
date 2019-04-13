@@ -9,7 +9,6 @@ import uuid
 from time import sleep
 import random
 import subprocess
-import matlab.engine
 lastcallnewline = True
 def consoleprint_cr(s):
     global lastcallnewline
@@ -57,12 +56,16 @@ class Worker:
     def __init__(self):
         self.logfilestoremove = []
         self.logfilename = os.getcwd()+"/pipeworker.log"
+        # Empty the logfile
+        self.logfile = open(self.logfilename,'w')
+        self.logfile.close()
+
         self.errormessage = ""
     def grabjob(self):
         # Find a jobfile and move it to 'current
         savedir = os.getcwd();
         os.chdir(self.jobfolder)
-        joblist = filter(os.path.isfile, os.listdir(self.jobfolder))
+        joblist = list(filter(os.path.isfile, os.listdir(self.jobfolder)))
         os.chdir(savedir)
         for jobfile in joblist:
             fromfile = self.jobfolder + "/" + jobfile
@@ -186,7 +189,10 @@ class Worker:
             self.removelogfiles()
             
     def logmessage(self, s):
-        self.logfile = open(self.logfilename,'a')
+        try:
+            self.logfile = open(self.logfilename,'a')
+        except:
+            self.logfile = open(self.logfilename,'w')
         self.logfile.write(s+"\n")
         self.logfile.close()
 

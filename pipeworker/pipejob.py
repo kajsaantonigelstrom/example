@@ -11,7 +11,10 @@ from time import sleep
 import subprocess
 import matlab.engine
 import platform
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 lastcallnewline = True
 class Dictionary:
@@ -44,7 +47,7 @@ class Dictionary:
             restofstring = restofstring[pos2+1:]
 
             pos=restofstring.find("%")
-        print reply
+        print (reply)
         return reply
 
     def addDefine(self, define):
@@ -57,7 +60,7 @@ class Dictionary:
             raise "Syntax error"
 
         self.mydict[param[0]] = param[1]
-        print self.mydict
+        print (self.mydict)
         return
 
 class PipeJob:
@@ -78,10 +81,10 @@ class PipeJob:
         self.brainname = os.path.basename(self.brainfolder);
         self.command = []
         self.matlabused = False
-	self.shellcommand = False
+        self.shellcommand = False
         self.replacer.addDefine("BRAIN="+os.path.basename(self.brainfolder))
         self.replacer.addDefine("BRAINFOLDER="+self.brainfolder)
-	os.chdir(self.brainfolder);
+        os.chdir(self.brainfolder);
         while(1):
             cmd = f.readline().rstrip()
             if cmd == "":
@@ -105,10 +108,10 @@ class PipeJob:
         # open a fresh logfile
         self.logfile = open(self.logfilename,'w')
         self.logfile.close()
-        print self.command
+        print (self.command)
 
     def startmatlab(self, command):
-        print "start matlab"
+        print ("start matlab")
         scriptpath, scriptname = ntpath.split(command[1])
         parameterlist = []
         self.matlabreturnvariable = ""
@@ -125,7 +128,6 @@ class PipeJob:
             print(parameterlist[i][0] + " = " + parameterlist[i][1])
             self.matlabengine.workspace[parameterlist[i][0]] = parameterlist[i][1]
 
-        self.matlabengine.chdir(self.brainfolder);
         if len(scriptpath) > 0:
             self.matlabengine.addpath(scriptpath)
         self.out = StringIO.StringIO()
@@ -140,50 +142,45 @@ class PipeJob:
     def start(self):
         if self.matlabused and self.currentstep == 0:
             self.writestate("Starting the Matlab engine" + "    " + self.brainname + "    " + self.myid)
-            print "Starting Matlab Engine"
+            print ("Starting Matlab Engine")
             self.matlabengine = matlab.engine.start_matlab()
-            print "Matlab Started"
-
+            print ("Matlab Started")
+            self.matlabengine.chdir(self.brainfolder);
+ 
         self.currentcommand = self.command[self.currentstep]
         args = self.currentcommand.split()
-
         self.writestate(str(self.currentstep+1)+"/"+str(len(self.command)) + " "+self.brainname + " " + self.myid + " '" + self.currentcommand +"'")
-
         self.matlabcommand = False
-	self.shellcommand = False
+        self.shellcommand = False
         self.logmessage("started " + self.currentcommand)
         print(self.brainfolder+" "+os.path.basename(self.brainfolder))
         print("before "+self.currentcommand)
         if (args[0] == "MATLAB"):
             self.matlabcommand = True
             self.startmatlab(args)
-	elif args[0] == 'cd' or args[0] == 'export':
-	    self.shellcommand = True
+        elif args[0] == 'cd' or args[0] == 'export':
+            self.shellcommand = True
             if (len(args) != 2):
-	        self.logmessage(args[0]+": syntax error")
-		running = False
+                self.logmessage(args[0]+": syntax error")
+                running = False
                 return 'exception'
-	    if args[0] == 'cd':
-		os.chdir(args[1])
-	    else: # export
-		env = args[1].split('=')
-		if (len(env) != 2):
-	            self.logmessage(args[0]+": syntax error")
-		    running = False
+            if args[0] == 'cd':
+                os.chdir(args[1])
+            else: # export
+                env = args[1].split('=')
+                if (len(env) != 2):
+                    self.logmessage(args[0]+": syntax error")
+                    running = False
                     return 'exception'
-		os.environ[env[0]]=env[1]
-		print 66
-		print os.environ['PATH']
-		print os.environ['YY']
-		print os.environ
-	else:
+                os.environ[env[0]]=env[1]
+        else:
             # open the logfile for use in subprocess
             self.logfile_stdout = open(self.logfilename_stdout,'w')
             self.logfile_stderr = open(self.logfilename_stderr,'w')
             if (os.name == 'nt'):
-                self.process = subprocess.Popen(args, 0, None, None, self.logfile_stdout, self.logfile_stderr, env=os.environ, shell=True)
+                self.process = subprocess.Popen(args, 0, None, None, self.logfile_stdout, self.logfile_stderr, cwd=os.getcwd(), env=os.environ, shell=True)
             else:
-                self.process = subprocess.Popen(args, 0, None, None, self.logfile_stdout, self.logfile_stderr, env=os.environ)
+                self.process = subprocess.Popen(args, 0, None, None, self.logfile_stdout, self.logfile_stderr, cwd=os.getcwd(), env=os.environ)
         print("after "+self.currentcommand)
         return
 
@@ -227,17 +224,17 @@ class PipeJob:
         self.logfile.write(s+"\n")
         self.logfile.close()
         if doprint:
-            print s
+            print (s)
         
     def poll(self):
             # poll the process
-	    if (self.shellcommand):
-		self.returncode = 0
+            if (self.shellcommand):
+                self.returncode = 0
             elif (self.matlabcommand):
                 self.returncode = self.pollmatlab()
             else:
                 self.returncode = self.process.poll()
-                if self.returncode != 0:
+                if self.returncode != None and self.returncode != 0:
                     self.pendingerror = True
                     
             if (self.returncode == None):

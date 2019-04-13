@@ -280,6 +280,9 @@ class Monitor:
         recipename = self.CheckRecipeName(recipename)
         try:
             recipe = recipe.decode('utf-8')
+        except:
+            pass
+        try:
             frcp = open(self.recipefolder+"/"+recipename, "w")
             frcp.write(recipe)
             frcp.close()
