@@ -60,9 +60,10 @@ class Dictionary:
             raise "Syntax error"
 
         self.mydict[param[0]] = param[1]
-        print (self.mydict)
         return
-
+    def printit(self):
+        for x in self.mydict:
+            print (x, "=", self.mydict[x])
 class PipeJob:
     def __init__(self, jobfile):
         self.replacer = Dictionary()
@@ -84,6 +85,8 @@ class PipeJob:
         self.shellcommand = False
         self.replacer.addDefine("BRAIN="+os.path.basename(self.brainfolder))
         self.replacer.addDefine("BRAINFOLDER="+self.brainfolder)
+        for x in os.environ:
+            self.replacer.addDefine(x+"="+os.environ[x])
         os.chdir(self.brainfolder);
         while(1):
             cmd = f.readline().rstrip()
@@ -168,6 +171,7 @@ class PipeJob:
                 os.chdir(args[1])
             else: # export
                 env = args[1].split('=')
+                self.replacer.addDefine(args[1])
                 if (len(env) != 2):
                     self.logmessage(args[0]+": syntax error")
                     running = False
@@ -287,6 +291,7 @@ def main():
     while (job.running):
         job.poll();
         sleep(1)
+#    job.replacer.printit()
     sys.exit(0)
     
 if __name__ == '__main__':
