@@ -38,3 +38,8 @@ After this %X% will mean 'hej' in the recipe.
 export X=hej
 The difference is that this will be added to the 'process environment' and thus
 be accessable by subsequent commands in recipe
+5. If you install the MatLab application you can call matlab functions from the recipe, ex:
+MATLAB /home/suit.m filename=2_T1w_MPR.nii RET=errvalue
+This will run the script 'suit.m'. It will set the variable 'filename' in the matlab
+workspace. And it will try to find the variable 'errvalue' in the workspace and return this
+to the pipeworker system.
