@@ -9,7 +9,11 @@ import os
 import ntpath
 from time import sleep
 import subprocess
-import matlab.engine
+matlabinstalled = True
+try:
+    import matlab.engine
+except:
+    matlabinstalled = False
 import platform
 try:
     from StringIO import StringIO
@@ -36,13 +40,13 @@ class Dictionary:
             pos2 = restofstring.find("%")
             if pos2 < 0:    
                 self.errorstring = "ERROR: Uneven number of '%' in "+cmd
-                raise "Syntax error"
+                raise BaseException("Syntax error")
             keyword = restofstring[:pos2]
             try:
                 reply = reply + self.mydict[keyword]
             except:
                 self.errorstring = "ERROR: Cannot find replacement for "+keyword+ " in "+cmd
-                raise "Syntax error"
+                raise BaseException("Syntax error")
                 
             restofstring = restofstring[pos2+1:]
 
@@ -54,10 +58,10 @@ class Dictionary:
         param = define.split('=')
         if len(param) == 1:
             self.errorstring = "ERROR: Missing '=' in .DEFINE "+define
-            raise "Syntax error"
+            raise BaseException("Syntax error")
         if len(param) > 2:
             self.errorstring = "ERROR: Too many '=' in .DEFINE "+define
-            raise "Syntax error"
+            raise BaseException("Syntax error")
 
         self.mydict[param[0]] = param[1]
         return
@@ -83,10 +87,15 @@ class PipeJob:
         self.command = []
         self.matlabused = False
         self.shellcommand = False
+        self.matlabcommand = False
+        self.process = None
         self.replacer.addDefine("BRAIN="+os.path.basename(self.brainfolder))
         self.replacer.addDefine("BRAINFOLDER="+self.brainfolder)
         for x in os.environ:
-            self.replacer.addDefine(x+"="+os.environ[x])
+            try:
+                self.replacer.addDefine(x+"="+os.environ[x])
+            except:
+                pass # More than one '=' in environment variable, just skip
         os.chdir(self.brainfolder);
         while(1):
             cmd = f.readline().rstrip()
@@ -143,7 +152,13 @@ class PipeJob:
         f.write(str);
         f.close()
     def start(self):
+        global matlabinstalled
         if self.matlabused and self.currentstep == 0:
+            if (not matlabinstalled):
+                self.logmessage("MatLab needed but not installed")
+                self.writestate("ERROR: MatLab needed but not installed")
+                self.running = False
+                return 'exception'
             self.writestate("Starting the Matlab engine" + "    " + self.brainname + "    " + self.myid)
             print ("Starting Matlab Engine")
             self.matlabengine = matlab.engine.start_matlab()
@@ -165,7 +180,7 @@ class PipeJob:
             self.shellcommand = True
             if (len(args) != 2):
                 self.logmessage(args[0]+": syntax error")
-                running = False
+                self.running = False
                 return 'exception'
             if args[0] == 'cd':
                 os.chdir(args[1])
@@ -174,7 +189,7 @@ class PipeJob:
                 self.replacer.addDefine(args[1])
                 if (len(env) != 2):
                     self.logmessage(args[0]+": syntax error")
-                    running = False
+                    self.running = False
                     return 'exception'
                 os.environ[env[0]]=env[1]
         else:
@@ -186,7 +201,7 @@ class PipeJob:
             else:
                 self.process = subprocess.Popen(args, 0, None, None, self.logfile_stdout, self.logfile_stderr, cwd=os.getcwd(), env=os.environ)
         print("after "+self.currentcommand)
-        return
+        return 0
 
     def pollmatlab(self):
         isdone = self.future.done();
@@ -279,6 +294,7 @@ class PipeJob:
 
                 return
             # Yes !
+            print(555)
             self.start()
 
 def main():
@@ -287,7 +303,8 @@ def main():
         sys.exit(-1)
     jobfile = sys.argv[1]
     job = PipeJob(jobfile);
-    job.start();
+    if (job.start() != 0):
+        sys.exit(-1)
     while (job.running):
         job.poll();
         sleep(1)
