@@ -28,6 +28,7 @@ class Dictionary:
         return
     def Translate(self, cmd):
         restofstring = cmd
+        print cmd
         reply = ""
         pos=restofstring.find("%")
         if pos < 0:
@@ -36,12 +37,16 @@ class Dictionary:
         while pos >= 0:
             if pos >= 0:
                 reply = reply + restofstring[:pos]
+                print restofstring[:pos]
+                print reply
             restofstring = restofstring[pos+1:]
+            print restofstring
             pos2 = restofstring.find("%")
             if pos2 < 0:    
                 self.errorstring = "ERROR: Uneven number of '%' in "+cmd
                 raise BaseException("Syntax error")
             keyword = restofstring[:pos2]
+            print keyword
             try:
                 reply = reply + self.mydict[keyword]
             except:
@@ -49,8 +54,9 @@ class Dictionary:
                 raise BaseException("Syntax error")
                 
             restofstring = restofstring[pos2+1:]
-
+            print restofstring
             pos=restofstring.find("%")
+        reply = reply + restofstring
         print (reply)
         return reply
 
@@ -107,7 +113,7 @@ class PipeJob:
                 if cmd.find(".DEFINE") >= 0:
                     self.replacer.addDefine(cmd[8:])
                 else:
-                    self.command.append(self.replacer.Translate(cmd))
+                    self.command.append(cmd)
             except:
                 print (self.replacer.errorstring)
                 self.writestate(self.replacer.errorstring)
@@ -165,7 +171,8 @@ class PipeJob:
             print ("Matlab Started")
             self.matlabengine.chdir(self.brainfolder);
  
-        self.currentcommand = self.command[self.currentstep]
+        self.currentcommand = self.replacer.Translate(self.command[self.currentstep])
+	print self.currentcommand
         args = self.currentcommand.split()
         self.writestate(str(self.currentstep+1)+"/"+str(len(self.command)) + " "+self.brainname + " " + self.myid + " '" + self.currentcommand +"'")
         self.matlabcommand = False
@@ -273,7 +280,7 @@ class PipeJob:
                     self.logmessage(l)
 
                 self.logfile_stdout.close() # close the logfile after use in subprocess
-                self.logfile_stdout.close() # close the logfile after use in subprocess
+                self.logfile_stderr.close() # close the logfile after use in subprocess
                 try:
                     os.remove(self.logfilename_stdout)
                     os.remove(self.logfilename_stderr)
