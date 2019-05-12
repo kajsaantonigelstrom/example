@@ -45,8 +45,12 @@ class MainWindow(wx.Frame):
 
         # The listbox with on-going jobs
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-        st2 = wx.StaticText(panel, label='On-going jobs:')
+        st2 = wx.StaticText(panel, label='On-going jobs:       ')
+        banana = wx.StaticBitmap(panel, -1, wx.Bitmap("banana.png", wx.BITMAP_TYPE_ANY), (0, 0), (32, 32))
+        banana.Bind(wx.EVT_LEFT_DOWN, self.GoingBananas)
+
         hbox2.Add(st2)
+        hbox2.Add(banana, flag=wx.RIGHT)
         vbox.Add(hbox2, flag=wx.LEFT | wx.TOP, border=10)
 
         vbox.Add((-1, 5))
@@ -162,3 +166,7 @@ class MainWindow(wx.Frame):
         self.monitor.ClearQueue()
         self.updateUI()
 
+    def GoingBananas(self, event):
+        self.monitor.ClearQueue()
+        self.monitor.ClearFinished()
+        self.monitor.ClearCurrent()

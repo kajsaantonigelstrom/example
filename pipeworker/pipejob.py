@@ -28,7 +28,6 @@ class Dictionary:
         return
     def Translate(self, cmd):
         restofstring = cmd
-        print cmd
         reply = ""
         pos=restofstring.find("%")
         if pos < 0:
@@ -37,16 +36,12 @@ class Dictionary:
         while pos >= 0:
             if pos >= 0:
                 reply = reply + restofstring[:pos]
-                print restofstring[:pos]
-                print reply
             restofstring = restofstring[pos+1:]
-            print restofstring
             pos2 = restofstring.find("%")
             if pos2 < 0:    
                 self.errorstring = "ERROR: Uneven number of '%' in "+cmd
                 raise BaseException("Syntax error")
             keyword = restofstring[:pos2]
-            print keyword
             try:
                 reply = reply + self.mydict[keyword]
             except:
@@ -54,10 +49,8 @@ class Dictionary:
                 raise BaseException("Syntax error")
                 
             restofstring = restofstring[pos2+1:]
-            print restofstring
             pos=restofstring.find("%")
         reply = reply + restofstring
-        print (reply)
         return reply
 
     def addDefine(self, define):
@@ -148,8 +141,8 @@ class PipeJob:
 
         if len(scriptpath) > 0:
             self.matlabengine.addpath(scriptpath)
-        self.out = StringIO.StringIO()
-        self.err = StringIO.StringIO()
+        self.out = StringIO()
+        self.err = StringIO()
         print ("Run MATLAB "+scriptname)
         self.future = self.matlabengine.run(scriptname, nargout=0, async=True, stdout=self.out,stderr=self.err)
         
@@ -172,7 +165,7 @@ class PipeJob:
             self.matlabengine.chdir(self.brainfolder);
  
         self.currentcommand = self.replacer.Translate(self.command[self.currentstep])
-	print self.currentcommand
+        print (self.currentcommand)
         args = self.currentcommand.split()
         self.writestate(str(self.currentstep+1)+"/"+str(len(self.command)) + " "+self.brainname + " " + self.myid + " '" + self.currentcommand +"'")
         self.matlabcommand = False

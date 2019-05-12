@@ -164,6 +164,9 @@ class Monitor:
     def ClearFinished(self):
         deletefiles(self.jobfolder+"/finished");
 
+    def ClearCurrent(self):
+        deletefiles(self.jobfolder + "/current");
+
     def ClearQueue(self):
         deletefiles(self.jobfolder);
 
