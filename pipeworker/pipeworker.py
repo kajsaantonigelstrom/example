@@ -217,10 +217,11 @@ def main():
     # Validate configuration
     if (not w.CheckConfig()):
         print ("The file 'pipeworker.cfg' should have two lines:")
-        print ("line 1: The folder where the main configuration file 'pipeline.cfg' is located")
+        print ("line 1: The full path and name of the Main Configuration File (see below)")
+        print ("        Note that this file must be accessible from both Monitor and Workers")
         print ("line 2: The number of allowed concurrent processes for this server")
         print ("")
-        print ("The main configuration file should have the following layout")
+        print ("The Main Configuration File should have the following layout")
         print ("line 1: The Job Folder which will be used to communicate information about")
         print ("        jobs. This folder must be the same on every computer used. This can")
         print ("        be accomplished by using symbolic links on linux (the ln -s command) or")
