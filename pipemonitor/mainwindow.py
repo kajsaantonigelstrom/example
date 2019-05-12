@@ -167,6 +167,13 @@ class MainWindow(wx.Frame):
         self.updateUI()
 
     def GoingBananas(self, event):
-        self.monitor.ClearQueue()
-        self.monitor.ClearFinished()
-        self.monitor.ClearCurrent()
+        dial = wx.MessageDialog(None, 'All current Jobs will be deleted. Sure?\n(Remember to kill all Workers)', 'WARNING!!!',
+                                wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
+        if dial.ShowModal() == wx.ID_YES:
+            self.monitor.ClearQueue()
+            self.monitor.ClearFinished()
+            self.monitor.ClearCurrent()
+            dial.Destroy()
+
+
+

@@ -77,8 +77,15 @@ class PipeJob:
         self.jobname = jobfile
         # Get the recipe
         f = open(jobfile,"r");
-        self.brainfolder = f.readline().rstrip();
-        self.logfilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".log"
+        firstline = f.readline().rstrip()
+        self.deletelogfile = True
+        if firstline[0] == "0" or firstline[0] == "1":
+            self.deletelogfile = firstline[0] == "1"
+            self.brainfolder = firstline[2:]
+        else:
+            self.brainfolder = firstling
+
+        self.logfilename = self.CreateBrainLogfile(self.deletelogfile)
         self.logfilename_stdout = self.brainfolder+"/"+os.path.basename(self.brainfolder)+"_stdout.log"
         self.logfilename_stderr = self.brainfolder+"/"+os.path.basename(self.brainfolder)+"_stderr.log"
         self.statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
@@ -120,6 +127,30 @@ class PipeJob:
         self.logfile = open(self.logfilename,'w')
         self.logfile.close()
         print (self.command)
+
+    def CreateBrainLogfile(self, deleteflag):
+        name = self.brainfolder + "/" + os.path.basename(self.brainfolder) + ".log"
+        if deleteflag:
+            i = 0
+            while(True):
+                try:
+                    if (i==0):
+                        os.remove(name)
+                    else:
+                        os.remove(name+str(i))
+                    i = i + 1
+                except:
+                    break
+            return name
+        # We want to keep the logfiles, generate a new name
+        if os.path.isfile(name):
+            i = 1
+            while(i < 150):
+                newname = name+str(i)
+                if (not os.path.isfile(newname)):
+                    return newname
+                i = i + 1
+        return name
 
     def startmatlab(self, command):
         print ("start matlab")
@@ -294,7 +325,6 @@ class PipeJob:
 
                 return
             # Yes !
-            print(555)
             self.start()
 
 def main():

@@ -20,6 +20,7 @@ class Monitor:
         self.currentjobs = []
         self.jobqueue = []
         self.finishedjobs = []
+        self.deletelogfileflag = True
 
     def readstatestring(self, jobfile):
         try:
@@ -194,7 +195,10 @@ class Monitor:
             # Create a corresponding job file
             jobfile = self.jobfolder+"/"+brain+".job"
             f = open(jobfile,"w")
-            f.write(self.braintopfolder+"/"+brain);
+            deletestring = "0"
+            if (self.deletelogfileflag):
+                deletestring = "1"
+            f.write(deletestring+" "+self.braintopfolder+"/"+brain);
             f.write("\n")
             f.write(recipestr)
             f.close()
