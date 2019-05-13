@@ -10,10 +10,7 @@ class SelectBrainsDialog(wx.Dialog):
 
         panel = wx.Panel(self)
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        t1 = wx.StaticText(panel, label="Select Brains:")
-        vbox.Add(t1, flag=wx.ALIGN_LEFT)
-        self.sellist = wx.CheckListBox(panel,choices=self.selections.choices)
+        self.sellist = wx.CheckListBox(panel,choices=self.selections.choices,size=(-1,450))
         for ix in range(0, len(self.selections.choices)):
             self.sellist.Check(ix, self.selections.selection[ix])
         btn_cancel = wx.Button(panel, id=wx.ID_CANCEL)
@@ -27,13 +24,25 @@ class SelectBrainsDialog(wx.Dialog):
         btn_none = wx.Button(panel, label="UNselect All")
         self.Bind(wx.EVT_BUTTON, self.bnt_selectNone, btn_none)
 
-        vbox.Add(btn_ok, flag=wx.ALIGN_CENTER)
-        vbox.Add(btn_cancel, flag=wx.ALIGN_CENTER)
-        vbox.Add(btn_all, flag=wx.ALIGN_CENTER)
-        vbox.Add(btn_none, flag=wx.ALIGN_CENTER)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(15,15)
+        
+        topbox = wx.BoxSizer(wx.HORIZONTAL)
+        topbox.Add(self.sellist, 2, flag=wx.LEFT|wx.RIGHT|wx.EXPAND)
 
-        vbox.Add(self.sellist)
+        selbox = wx.BoxSizer(wx.VERTICAL)
+        selbox.Add(btn_all, flag=wx.ALIGN_CENTER_VERTICAL)
+        selbox.Add(btn_none, flag=wx.ALIGN_CENTER_VERTICAL)
 
+        topbox.Add(selbox, 1, flag=wx.ALIGN_CENTER_VERTICAL)
+
+        vbox.Add(topbox)
+
+        okbox = wx.BoxSizer(wx.HORIZONTAL)
+        okbox.Add(btn_ok, flag=wx.ALIGN_CENTER)
+        okbox.Add(btn_cancel, flag=wx.ALIGN_CENTER)
+        vbox.Add(15,15);
+        vbox.Add(okbox, flag=wx.ALIGN_CENTER)
         panel.SetSizer(vbox)
 
     def btn_OK(self, event):

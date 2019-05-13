@@ -134,7 +134,7 @@ class MainWindow(wx.Frame):
         brainselector.Add(brainsel_btn, 0)
         vbox.Add(brainselector, flag=wx.LEFT|wx.RIGHT|wx.EXPAND, border=10)
         panel.SetSizer(vbox)
-        
+        self.updateBrainselectionString()
     def menuhandler(self, event):
         id = event.GetId();
         if (id == 101):
@@ -183,5 +183,15 @@ class MainWindow(wx.Frame):
             dial.Destroy()
     def SelectBrains(self, event):
         SelectBrainsDialog(self, "Select Brains", self.monitor).ShowModal();
+        self.updateBrainselectionString()
+
+    def updateBrainselectionString(self):
+        cnt = self.monitor.brainselections.braincount()
+        sel = self.monitor.brainselections.selectedcount()
+        if (cnt == sel):
+            self.brainsel_hdr.SetLabel("All Brains Selected")
+        else:
+            self.brainsel_hdr.SetLabel(str(sel) + " of " + str(cnt) + " Brains Selected")
+
 
 
