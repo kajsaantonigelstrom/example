@@ -3,7 +3,7 @@ import sys
 from dialog_gentestdata import GenerateTestdataDialog
 from dialog_genjobs import GenerateJobsDialog
 from dialog_handlerecipes import HandleRecipesDialog
-
+from dialog_selectbrains import SelectBrainsDialog
 class MainWindow(wx.Frame):
     def __init__(self, parent, monitor):
         super(MainWindow, self).__init__(parent, title="hej", size=(650,650))
@@ -125,7 +125,14 @@ class MainWindow(wx.Frame):
         jobsizer.Add(self.brainsfolder_txt, 3);
         jobsizer.Add(brainsfolder_sel, 0);
         vbox.Add(jobsizer, flag=wx.LEFT|wx.RIGHT|wx.EXPAND, border=10)
-        
+        # Brain Selection
+        brainselector = wx.BoxSizer(wx.HORIZONTAL)
+        self.brainsel_hdr = wx.StaticText(panel, label="All Brains Selected")
+        brainsel_btn = wx.Button(panel, label="Select Brains")
+        self.Bind(wx.EVT_BUTTON, self.SelectBrains, brainsel_btn)
+        brainselector.Add(self.brainsel_hdr, 4)
+        brainselector.Add(brainsel_btn, 0)
+        vbox.Add(brainselector, flag=wx.LEFT|wx.RIGHT|wx.EXPAND, border=10)
         panel.SetSizer(vbox)
         
     def menuhandler(self, event):
@@ -174,6 +181,7 @@ class MainWindow(wx.Frame):
             self.monitor.ClearFinished()
             self.monitor.ClearCurrent()
             dial.Destroy()
-
+    def SelectBrains(self, event):
+        SelectBrainsDialog(self, "Select Brains", self.monitor).ShowModal();
 
 

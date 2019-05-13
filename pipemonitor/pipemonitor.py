@@ -15,6 +15,73 @@ def deletefiles(dir):
     for f in l:
         os.remove(dir+"/"+f)
 
+class BrainSelections:
+    def __init__(self, braintopfolder):
+        self.braintopfolder = braintopfolder
+        self.startfolder = os.getcwd()
+        self.initlist()
+
+    def initlist(self):
+        self.selection = []
+        os.chdir(self.braintopfolder)
+        self.choices = list(filter(os.path.isdir, os.listdir(self.braintopfolder)))
+        for i in range(0, len(self.choices)):
+            self.selection.append(True)
+
+        #reset cwd
+        os.chdir(self.startfolder)
+
+        # check if there is a file already
+        try:
+            f = open("selectedbrains.txt", "r")
+            index = 0
+            while (True):
+                line = f.readline().rstrip();
+                if (line == ""):
+                    break;
+                s = True
+                if (line[0] == "0"):
+                    s = False
+                c = line[2:]
+                if len(self.choices) <= index or self.choices[index] != c:
+                    raise BaseException("Not matching")
+                self.selection[index] = s
+                index = index + 1
+            f.close()
+            if index != len(self.selection):
+                raise BaseException("Not matching")
+        except:
+            # list has changed; regenerate
+            for i in range(0, len(self.choices)):
+                self.selection[i] = True
+            self.write()
+
+    def write(self):
+        try:
+            saveddir =  os.getcwd()
+            os.chdir(self.startfolder)
+            f = open("selectedbrains.txt", "w")
+            for i in range(0, len(self.choices)):
+                s = "0"
+                if (self.selection[i]):
+                    s = "1"
+                f.write(s+" "+self.choices[i]+"\n")
+            f.close()
+        except:
+            print "Error writing 'selectedbrains.txt"
+        os.chdir(saveddir)
+
+    def braincount(self):
+        return len(self.choices)
+
+    def selectedcount(self):
+        count = 0
+        for i in range(0, len(self.choices)):
+            if (self.selection[i]):
+                count = count + 1
+        return count
+
+
 class Monitor:
     def __init__(self):
         self.currentjobs = []
@@ -138,7 +205,8 @@ class Monitor:
             except:
                 self.errormessage = "Cannot create folder "+finishedfolder
                 return False
-                
+
+        self.brainselections = BrainSelections(self.braintopfolder)
         return True
 
     # Re-writes the configuration file; used when the user changes
@@ -190,8 +258,11 @@ class Monitor:
             return "Cannot open the recipe ',"+recipe+"'"
 
         os.chdir(self.braintopfolder)
-        brainlist = list(filter(os.path.isdir, os.listdir(self.braintopfolder)))
-        for brain in brainlist:
+        brainlist = self.brainselections.choices
+        for ix in range(0, len(brainlist)):
+            if (not self.brainselections.selection[ix]):
+                continue
+            brain = brainlist[ix]
             # Create a corresponding job file
             jobfile = self.jobfolder+"/"+brain+".job"
             f = open(jobfile,"w")
@@ -225,6 +296,7 @@ class Monitor:
             f = open("test.image", "w");
             f.write("hej")
             f.close()
+        self.brainselections.initlist()
 
     def SetBrainsFolder(self, dir):
         self.braintopfolder = dir
@@ -297,6 +369,9 @@ class Monitor:
         except:
             return False
         return False
+
+    def GetSelections(self):
+        return self.brainselections
         
 def main():
 
