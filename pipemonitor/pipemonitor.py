@@ -95,15 +95,18 @@ class Monitor:
             self.brainfolder = f.readline().rstrip();
             f.close()
         except:
+            print ("exception opening jobfile ", jobfile)
             return ""
 
         statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
         try:
             f = open(statefilename,"r")
             state = f.readline().rstrip()
+            print ("read state: ", state)
             f.close()
             return state
         except:
+            print ("exception opening statefile ", statefilename)
             return ""
         
     # Called periodically to check the state of jobs
