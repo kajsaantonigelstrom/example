@@ -93,6 +93,8 @@ class Monitor:
         try:
             f = open(jobfile,"r");
             self.brainfolder = f.readline().rstrip();
+	    if self.brainfolder[0] == "0" or self.brainfolder[0] == "1":
+		self.brainfolder = self.brainfolder[2:]
             f.close()
         except:
             print ("exception opening jobfile ", jobfile)
