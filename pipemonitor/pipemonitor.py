@@ -90,17 +90,20 @@ class Monitor:
         self.deletelogfileflag = True
 
     def readstatestring(self, jobfile):
+        jobfilebase = os.path.basename(jobfile)
+        jobfilebase = jobfilebase[0:len(jobfilebase)-4]
+
         try:
             f = open(jobfile,"r");
             self.brainfolder = f.readline().rstrip();
-	    if self.brainfolder[0] == "0" or self.brainfolder[0] == "1":
-		self.brainfolder = self.brainfolder[2:]
+            if self.brainfolder[0] == "0" or self.brainfolder[0] == "1":
+                self.brainfolder = self.brainfolder[2:]
             f.close()
         except:
             print ("exception opening jobfile ", jobfile)
             return ""
 
-        statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
+        statefilename = self.brainfolder+"/pipelogs/"+jobfilebase+".state"
         try:
             f = open(statefilename,"r")
             state = f.readline().rstrip()
