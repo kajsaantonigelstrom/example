@@ -75,6 +75,7 @@ class PipeJob:
         self.myid = platform.node() # id of this computer
         self.running = True
         self.jobname = jobfile
+
         # Get the recipe
         f = open(jobfile,"r");
         firstline = f.readline().rstrip()
@@ -83,12 +84,17 @@ class PipeJob:
             self.deletelogfile = firstline[0] == "1"
             self.brainfolder = firstline[2:]
         else:
-            self.brainfolder = firstling
+            self.brainfolder = firstline
+        self.logfilepath = self.brainfolder+"/pipelogs"
+        if not os.path.exists(self.logfilepath):
+            os.makedirs(self.logfilepath)
+        self.logfilebase = os.path.basename(self.jobname)
+        self.logfilebase = self.logfilebase[0:len(self.logfilebase)-4]
 
         self.logfilename = self.CreateBrainLogfile(self.deletelogfile)
-        self.logfilename_stdout = self.brainfolder+"/"+os.path.basename(self.brainfolder)+"_stdout.log"
-        self.logfilename_stderr = self.brainfolder+"/"+os.path.basename(self.brainfolder)+"_stderr.log"
-        self.statefilename = self.brainfolder+"/"+os.path.basename(self.brainfolder)+".state"
+        self.logfilename_stdout = self.logfilepath+"/"+self.logfilebase+"_stdout.log"
+        self.logfilename_stderr = self.logfilepath+"/"+self.logfilebase+"_stderr.log"
+        self.statefilename = self.logfilepath+"/"+self.logfilebase+".state"
         self.brainname = os.path.basename(self.brainfolder);
         self.command = []
         self.matlabused = False
@@ -129,7 +135,7 @@ class PipeJob:
         print (self.command)
 
     def CreateBrainLogfile(self, deleteflag):
-        name = self.brainfolder + "/" + os.path.basename(self.brainfolder) + ".log"
+        name = self.logfilepath + "/" + self.logfilebase + ".log"
         if deleteflag:
             i = 0
             while(True):

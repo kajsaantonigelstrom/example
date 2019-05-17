@@ -6,7 +6,7 @@ import shutil
 from time import sleep
 import wx
 from mainwindow import MainWindow
-
+from datetime import datetime
 # delete files in a folder (not recursive);
 # removes the folder if possible
 def deletefiles(dir):
@@ -226,7 +226,16 @@ class Monitor:
             estring = "Monitor Configuration file '"+mconfigfilename+"' not found"
             print (estring)
             return 0;
-
+    # generate a time tag
+    def GenereateTimeTag(self):
+        now = datetime.now()
+        s = str(now.year-2000).zfill(2)
+        s = s + str(now.month).zfill(2)
+        s = s + str(now.day).zfill(2)
+        s = s + str(now.hour).zfill(2)
+        s = s + str(now.minute).zfill(2)
+        s = s + str(now.second).zfill(2)
+        return s
     ## Methods below here are entry points for the commands in the
     ## user interface
     def ClearFinished(self):
@@ -245,9 +254,9 @@ class Monitor:
     def CreateJobs(self, recipe):
         recipe = self.CheckRecipeName(recipe)
         # remove jobs in jobfolder
-        deletefiles(self.jobfolder);
-        deletefiles(self.jobfolder+"/current");
-        deletefiles(self.jobfolder+"/finished");
+        #deletefiles(self.jobfolder);
+        #deletefiles(self.jobfolder+"/current");
+        #deletefiles(self.jobfolder+"/finished");
         recipestr = ""
         try:
             frcp = open(self.recipefolder+"/"+recipe, "r")
@@ -258,12 +267,13 @@ class Monitor:
 
         os.chdir(self.braintopfolder)
         brainlist = self.brainselections.choices
+        timetag = self.GenereateTimeTag()
         for ix in range(0, len(brainlist)):
             if (not self.brainselections.selection[ix]):
                 continue
             brain = brainlist[ix]
             # Create a corresponding job file
-            jobfile = self.jobfolder+"/"+brain+".job"
+            jobfile = self.jobfolder+"/"+brain+"_"+timetag+".job"
             f = open(jobfile,"w")
             deletestring = "0"
             if (self.deletelogfileflag):
