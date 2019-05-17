@@ -25,7 +25,7 @@ class SelectBrainsDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.bnt_selectNone, btn_none)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(15,15)
+        vbox.Add((15,15))
         
         topbox = wx.BoxSizer(wx.HORIZONTAL)
         topbox.Add(self.sellist, 2, flag=wx.LEFT|wx.RIGHT|wx.EXPAND)
@@ -41,7 +41,7 @@ class SelectBrainsDialog(wx.Dialog):
         okbox = wx.BoxSizer(wx.HORIZONTAL)
         okbox.Add(btn_ok, flag=wx.ALIGN_CENTER)
         okbox.Add(btn_cancel, flag=wx.ALIGN_CENTER)
-        vbox.Add(15,15);
+        vbox.Add((15,15))
         vbox.Add(okbox, flag=wx.ALIGN_CENTER)
         panel.SetSizer(vbox)
 

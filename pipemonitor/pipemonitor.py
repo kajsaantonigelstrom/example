@@ -68,7 +68,7 @@ class BrainSelections:
                 f.write(s+" "+self.choices[i]+"\n")
             f.close()
         except:
-            print "Error writing 'selectedbrains.txt"
+            print ("Error writing 'selectedbrains.txt'")
         os.chdir(saveddir)
 
     def braincount(self):
@@ -102,7 +102,6 @@ class Monitor:
         try:
             f = open(statefilename,"r")
             state = f.readline().rstrip()
-            print ("read state: ", state)
             f.close()
             return state
         except:
