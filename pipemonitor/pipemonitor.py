@@ -216,12 +216,9 @@ class Monitor:
     # jobdir or brainsdir
     def writeCfgFile(self):
         os.chdir(self.startfolder)
-        self.mconfigfilename = "pipemonitor.cfg"
         try:
-            f = open(self.mconfigfilename,"w");
+            f = open(self.mainconfigfile,"w");
             f.write(self.jobfolder)
-            f.write("\n");
-            f.write(self.recipefolder)
             f.write("\n");
             f.write(self.braintopfolder)
             f.write("\n");
